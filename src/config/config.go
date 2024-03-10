@@ -1,10 +1,14 @@
 package config
 
 import (
+	"fmt"
+	"log"
 	"time"
 
 	"github.com/spf13/viper"
 )
+
+var ProjectConfig *Config
 
 type Config struct {
 	Server   ServerConfig
@@ -100,15 +104,20 @@ func parsConfig(v *viper.Viper) (cfg *Config, err error) {
 	return cfg, nil
 }
 
-func GetConfig() *Config {
+func LoadConfig() {
 	path := findConfig("dev")
 	v, err := loadConfig(path, "yml")
 	if err != nil {
-		return nil
+		log.Fatal(err)
 	}
 	cfg, err := parsConfig(v)
 	if err != nil {
-		return nil
+		log.Fatal(err)
 	}
-	return cfg
+	fmt.Println(cfg)
+	ProjectConfig = cfg
+}
+
+func GetConfig() *Config {
+	return ProjectConfig
 }

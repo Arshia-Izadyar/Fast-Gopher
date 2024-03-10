@@ -9,4 +9,5 @@ import (
 func UserRouter(app *fiber.App, cfg *config.Config) {
 	h := handler.NewUserHandler(cfg)
 	app.Post("/", h.TestHandler)
+	app.Post("/login", h.LoginHandler)
 }
