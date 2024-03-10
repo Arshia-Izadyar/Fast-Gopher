@@ -2,6 +2,7 @@ package services
 
 import (
 	"database/sql"
+	"fmt"
 
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/api/dto"
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/common"
@@ -9,6 +10,8 @@ import (
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/data/models"
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/data/postgres"
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/pkg/service_errors"
+	"github.com/gofiber/fiber/v2"
+
 	"github.com/google/uuid"
 	"github.com/lib/pq"
 	"golang.org/x/crypto/bcrypt"
@@ -91,5 +94,48 @@ func (us *UserService) LoginUser(req *dto.UserDTO) (res *dto.UserTokenDTO, err e
 		return nil, err
 	}
 	return res, nil
+}
 
+func (us *UserService) GoogleLogin(c *fiber.Ctx) error {
+
+	url := config.AppConfig.GoogleLoginConfig.AuthCodeURL("randomstate")
+
+	c.Status(fiber.StatusSeeOther)
+	c.Redirect(url)
+	return c.JSON(url)
+}
+
+func (us *UserService) GoogleCallback(req *dto.GoogleUserInfoDTO) (*dto.UserTokenDTO, error) {
+
+	q := `
+	SELECT id FROM 
+	users WHERE email = $1;
+	`
+
+	var userId uuid.UUID
+	err := us.db.QueryRow(q, req.Email).Scan(&userId)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			q := `
+			INSERT INTO public.users (email, user_password)
+			VALUES ($1, $2) returning id;
+			`
+			err = us.db.QueryRow(q, req.Email, nil).Scan(&userId)
+			if err != nil {
+				fmt.Println(err)
+				return nil, &service_errors.ServiceError{EndUserMessage: service_errors.InternalError}
+			}
+		} else {
+			return nil, &service_errors.ServiceError{EndUserMessage: service_errors.InternalError}
+		}
+	}
+
+	tk, err := common.GenerateJwt(userId, us.cfg)
+	if err != nil {
+		fmt.Println(err)
+
+		return nil, &service_errors.ServiceError{EndUserMessage: service_errors.InternalError, Err: err}
+	}
+	return tk, nil
 }

@@ -10,6 +10,7 @@ import (
 
 func main() {
 	config.LoadConfig()
+	config.LoadGoogleConfig()
 
 	cfg := config.GetConfig()
 
