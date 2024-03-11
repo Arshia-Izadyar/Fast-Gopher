@@ -1,8 +1,11 @@
 package services
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
+	"io"
+	"net/http"
 	"time"
 
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/api/dto"
@@ -12,6 +15,7 @@ import (
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/data/postgres"
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/data/redis"
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/pkg/service_errors"
+	"github.com/bytedance/sonic"
 
 	"github.com/google/uuid"
 	"github.com/lib/pq"
@@ -100,15 +104,6 @@ func (us *UserService) LoginUser(req *dto.UserDTO) (res *dto.UserTokenDTO, err e
 	return res, nil
 }
 
-// func (us *UserService) GoogleLogin(c *fiber.Ctx) error {
-
-// 	url := config.AppConfig.GoogleLoginConfig.AuthCodeURL("randomstate")
-
-// 	c.Status(fiber.StatusSeeOther)
-// 	c.Redirect(url)
-// 	return c.JSON(url)
-// }
-
 func (us *UserService) GoogleCallback(req *dto.GoogleUserInfoDTO) (*dto.UserTokenDTO, error) {
 
 	q := `
@@ -144,6 +139,34 @@ func (us *UserService) GoogleCallback(req *dto.GoogleUserInfoDTO) (*dto.UserToke
 	return tk, nil
 }
 
+func (us *UserService) GoogleLoginWithCode(req *dto.GoogleCodeLoginDTO) (*dto.UserTokenDTO, error) {
+	googlecon := config.AppConfig.GoogleLoginConfig
+
+	token, err := googlecon.Exchange(context.Background(), req.Code)
+
+	if err != nil {
+		return nil, &service_errors.ServiceError{EndUserMessage: "Code-Token Exchange Failed"}
+	}
+
+	resp, err := http.Get("https://www.googleapis.com/oauth2/v2/userinfo?access_token=" + token.AccessToken)
+	if err != nil {
+		return nil, &service_errors.ServiceError{EndUserMessage: "User Data Fetch Failed"}
+	}
+
+	res, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, &service_errors.ServiceError{EndUserMessage: "User Data Fetch Failed"}
+	}
+
+	var data *dto.GoogleUserInfoDTO
+	err = sonic.Unmarshal(res, &data)
+	if err != nil {
+		return nil, &service_errors.ServiceError{EndUserMessage: "User Data Fetch Failed"}
+	}
+	return us.GoogleCallback(data)
+
+}
+
 func (us *UserService) Logout(req *dto.UserLogout) error {
 
 	err := redis.Set[bool](req.UserToken, true, us.cfg.JWT.AccessTokenExpireDuration*time.Minute)
@@ -159,9 +182,6 @@ func (us *UserService) Logout(req *dto.UserLogout) error {
 	if err != nil {
 		return err
 	}
-
-	// TODO: send command
-
+	// TODO: send command to remove from whitelist
 	return nil
-
 }

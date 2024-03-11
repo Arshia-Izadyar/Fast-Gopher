@@ -6,3 +6,7 @@ type GoogleUserInfoDTO struct {
 	VerifiedEmail bool   `json:"verified_email"`
 	Name          string `json:"name"`
 }
+
+type GoogleCodeLoginDTO struct {
+	Code string `json:"code"`
+}

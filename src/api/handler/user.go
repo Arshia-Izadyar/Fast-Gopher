@@ -113,6 +113,21 @@ func (uh *UserHandler) GoogleCallback(c *fiber.Ctx) error {
 	}
 }
 
+func (h *UserHandler) LoginWithGoogleCode(c *fiber.Ctx) error {
+	code := c.Query("code", "")
+	req := &dto.GoogleCodeLoginDTO{
+		Code: code,
+	}
+	if req.Code == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(helper.GenerateResponseWithError(&service_errors.ServiceError{EndUserMessage: "please send google code as a string in body"}, false))
+	}
+	tk, err := h.service.GoogleLoginWithCode(req)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(helper.GenerateResponseWithError(err, false))
+	}
+	return c.Status(fiber.StatusCreated).JSON(helper.GenerateResponse(tk, true))
+}
+
 func (h *UserHandler) Logout(c *fiber.Ctx) error {
 
 	token := c.Locals(constants.AuthenticationKey).(string)
