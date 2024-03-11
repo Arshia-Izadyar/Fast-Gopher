@@ -9,7 +9,7 @@ const (
 	// user
 	EmailExists        = "email already exits"
 	UsernameExists     = "Username already exits"
-	WrongPassword      = "WrongPassword"
+	WrongPassword      = "Wrong Password!"
 	PasswordsDontMatch = "Password don't match"
 	BadRequest         = "Bad Request"
 

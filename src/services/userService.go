@@ -39,16 +39,16 @@ func NewUserService(cfg *config.Config) *UserService {
 	}
 }
 
-func HasPassword(password string) (string, error) {
+func HashPassword(password string) (string, error) {
 	bs, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
 	if err != nil {
 		return "", err
 	}
 	return string(bs), nil
-
 }
 
 func (us *UserService) CreateUser(req *dto.UserCreateDTO) (err error) {
+	var usrId uuid.UUID
 
 	if req.UserPassword != req.UserPasswordConfirm {
 		return &service_errors.ServiceError{EndUserMessage: service_errors.PasswordsDontMatch}
@@ -58,9 +58,9 @@ func (us *UserService) CreateUser(req *dto.UserCreateDTO) (err error) {
 		return err
 	}
 
-	req.UserPassword, err = HasPassword(req.UserPassword)
+	req.UserPassword, err = HashPassword(req.UserPassword)
 	if err != nil {
-		return &service_errors.ServiceError{EndUserMessage: service_errors.InternalError, Err: err}
+		return &service_errors.ServiceError{EndUserMessage: "hashing password gone wrong", Err: err}
 	}
 
 	q := `
@@ -69,7 +69,6 @@ func (us *UserService) CreateUser(req *dto.UserCreateDTO) (err error) {
 	`
 	// "returning" is a psql feature
 
-	var usrId uuid.UUID
 	err = us.db.QueryRow(q, req.Email, req.UserPassword).Scan(&usrId)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok && pqErr.Code == "23505" {
@@ -104,19 +103,19 @@ func (us *UserService) LoginUser(req *dto.UserDTO) (res *dto.UserTokenDTO, err e
 	}
 	res, err = common.GenerateJwt(user.ID, us.cfg)
 	if err != nil {
-		return nil, err
+		return nil, &service_errors.ServiceError{EndUserMessage: "can't create JWT", Err: err}
 	}
 	return res, nil
 }
 
 func (us *UserService) GoogleCallback(req *dto.GoogleUserInfoDTO) (*dto.UserTokenDTO, error) {
 
+	var userId uuid.UUID
 	q := `
 	SELECT id FROM 
 	users WHERE email = $1;
 	`
 
-	var userId uuid.UUID
 	err := us.db.QueryRow(q, req.Email).Scan(&userId)
 
 	if err != nil {
@@ -160,13 +159,13 @@ func (us *UserService) GoogleLoginWithCode(req *dto.GoogleCodeLoginDTO) (*dto.Us
 
 	res, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, &service_errors.ServiceError{EndUserMessage: "User Data Fetch Failed"}
+		return nil, &service_errors.ServiceError{EndUserMessage: "User Data READ Failed"}
 	}
 
 	var data *dto.GoogleUserInfoDTO
 	err = sonic.Unmarshal(res, &data)
 	if err != nil {
-		return nil, &service_errors.ServiceError{EndUserMessage: "User Data Fetch Failed"}
+		return nil, &service_errors.ServiceError{EndUserMessage: "User Data Json unmarshal Failed"}
 	}
 	return us.GoogleCallback(data)
 
@@ -221,7 +220,7 @@ func (us *UserService) Refresh(req *dto.RefreshTokenDTO) (*dto.UserTokenDTO, err
 	}
 	res, err := common.GenerateJwt(userUUid, us.cfg)
 	if err != nil {
-		return nil, &service_errors.ServiceError{EndUserMessage: service_errors.InternalError, Err: err}
+		return nil, &service_errors.ServiceError{EndUserMessage: "JWT generation gone wrong", Err: err}
 	}
 	return res, nil
 }

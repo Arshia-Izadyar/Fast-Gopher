@@ -128,19 +128,18 @@ func (uh *UserHandler) GoogleCallback(c *fiber.Ctx) error {
 
 	resp, err := http.Get("https://www.googleapis.com/oauth2/v2/userinfo?access_token=" + token.AccessToken)
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(helper.GenerateResponseWithError(&service_errors.ServiceError{EndUserMessage: "User Data Fetch Failed"}, false))
-
+		return c.Status(fiber.StatusBadRequest).JSON(helper.GenerateResponseWithError(err, false))
 	}
 
 	res, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(helper.GenerateResponseWithError(&service_errors.ServiceError{EndUserMessage: "User Data Fetch Failed"}, false))
+		return c.Status(fiber.StatusBadRequest).JSON(helper.GenerateResponseWithError(err, false))
 	}
 
 	var data *dto.GoogleUserInfoDTO
 	err = sonic.Unmarshal(res, &data)
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(helper.GenerateResponseWithError(&service_errors.ServiceError{EndUserMessage: "User Data Fetch Failed"}, false))
+		return c.Status(fiber.StatusBadRequest).JSON(helper.GenerateResponseWithError(err, false))
 
 	}
 
