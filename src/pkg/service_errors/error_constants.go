@@ -13,11 +13,12 @@ const (
 	PasswordsDontMatch = "Password don't match"
 	BadRequest         = "Bad Request"
 
-	TokenNotPresent = "no token provided"
-	TokenExpired    = "token is expired !"
-	TokenInvalid    = "provided token is invalid"
-	NotRefreshToken = "provided token is not a refresh token"
-	InternalError   = "some thing happened"
+	TokenNotPresent    = "no token provided"
+	TokenExpired       = "token is expired !"
+	TokenInvalid       = "provided token is invalid"
+	TokenInvalidFormat = "provided token has invalid format"
+	NotRefreshToken    = "provided token is not a refresh token"
+	InternalError      = "some thing happened"
 
 	PermissionDenied = "Permission Denied"
 )

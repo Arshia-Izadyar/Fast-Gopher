@@ -3,14 +3,15 @@ package services
 import (
 	"database/sql"
 	"fmt"
+	"time"
 
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/api/dto"
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/common"
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/config"
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/data/models"
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/data/postgres"
+	"github.com/Arshia-Izadyar/Fast-Gopher/src/data/redis"
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/pkg/service_errors"
-	"github.com/gofiber/fiber/v2"
 
 	"github.com/google/uuid"
 	"github.com/lib/pq"
@@ -18,15 +19,18 @@ import (
 )
 
 type UserService struct {
-	db  *sql.DB
-	cfg *config.Config
+	db               *sql.DB
+	cfg              *config.Config
+	whiteListService *WhiteListService
 }
 
 func NewUserService(cfg *config.Config) *UserService {
 	db := postgres.GetDB()
+	wl := NewWhiteListService(cfg)
 	return &UserService{
-		db:  db,
-		cfg: cfg,
+		db:               db,
+		cfg:              cfg,
+		whiteListService: wl,
 	}
 }
 
@@ -96,14 +100,14 @@ func (us *UserService) LoginUser(req *dto.UserDTO) (res *dto.UserTokenDTO, err e
 	return res, nil
 }
 
-func (us *UserService) GoogleLogin(c *fiber.Ctx) error {
+// func (us *UserService) GoogleLogin(c *fiber.Ctx) error {
 
-	url := config.AppConfig.GoogleLoginConfig.AuthCodeURL("randomstate")
+// 	url := config.AppConfig.GoogleLoginConfig.AuthCodeURL("randomstate")
 
-	c.Status(fiber.StatusSeeOther)
-	c.Redirect(url)
-	return c.JSON(url)
-}
+// 	c.Status(fiber.StatusSeeOther)
+// 	c.Redirect(url)
+// 	return c.JSON(url)
+// }
 
 func (us *UserService) GoogleCallback(req *dto.GoogleUserInfoDTO) (*dto.UserTokenDTO, error) {
 
@@ -138,4 +142,26 @@ func (us *UserService) GoogleCallback(req *dto.GoogleUserInfoDTO) (*dto.UserToke
 		return nil, &service_errors.ServiceError{EndUserMessage: service_errors.InternalError, Err: err}
 	}
 	return tk, nil
+}
+
+func (us *UserService) Logout(req *dto.UserLogout) error {
+
+	err := redis.Set[bool](req.UserToken, true, us.cfg.JWT.AccessTokenExpireDuration*time.Minute)
+	if err != nil {
+		return err
+	}
+
+	err = us.whiteListService.WhiteListRemove(&dto.WhiteListAddDTO{
+		UserId:       req.UserId,
+		UserDeviceID: req.UserDeviceID,
+		UserIp:       req.UserIp,
+	})
+	if err != nil {
+		return err
+	}
+
+	// TODO: send command
+
+	return nil
+
 }

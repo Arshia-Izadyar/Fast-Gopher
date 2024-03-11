@@ -12,4 +12,5 @@ const (
 	AccessType        = "_access_token"
 	RefreshType       = "_refresh_type"
 	AuthenticationKey = "Authorization"
+	DeviceIdKey       = "Device-Id"
 )

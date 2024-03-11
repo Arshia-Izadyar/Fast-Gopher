@@ -55,7 +55,7 @@ func GenerateJwt(userId uuid.UUID, cfg *config.Config) (*dto.UserTokenDTO, error
 	return res, nil
 }
 
-func ValidateToken(token string, cfg *config.Config) (*jwt.Token, error) {
+func ValidateToken(token string, cfg *config.Config) (jwt.MapClaims, error) {
 
 	tk, err := jwt.Parse(token, func(t *jwt.Token) (interface{}, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -66,7 +66,15 @@ func ValidateToken(token string, cfg *config.Config) (*jwt.Token, error) {
 		return []byte(cfg.JWT.Secret), nil
 	})
 	if err != nil {
-		return nil, err
+		return nil, &service_errors.ServiceError{EndUserMessage: service_errors.TokenInvalid, Err: err}
 	}
-	return tk, nil
+	if claims, ok := tk.Claims.(jwt.MapClaims); ok {
+		exp := time.Unix(int64((claims[constants.ExpKey]).(float64)), 0)
+		now := time.Now()
+		if now.After(exp) {
+			return nil, &service_errors.ServiceError{EndUserMessage: service_errors.TokenExpired}
+		}
+		return claims, nil
+	}
+	return nil, nil
 }

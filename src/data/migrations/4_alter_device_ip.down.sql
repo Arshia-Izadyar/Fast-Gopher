@@ -1,0 +1,1 @@
+ALTER TABLE active_devices DROP COLUMN ips;

@@ -31,6 +31,7 @@ func InitServer(cfg *config.Config) error {
 
 func registerRouters(app *fiber.App, cfg *config.Config) {
 	router.UserRouter(app, cfg)
+	router.WhiteListAddRouter(app, cfg)
 
 }
 

@@ -8,11 +8,13 @@ import (
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/api/dto"
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/api/helper"
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/config"
+	"github.com/Arshia-Izadyar/Fast-Gopher/src/constants"
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/pkg/service_errors"
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/services"
 	"github.com/bytedance/sonic"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 )
 
 type UserHandler struct {
@@ -109,4 +111,33 @@ func (uh *UserHandler) GoogleCallback(c *fiber.Ctx) error {
 	} else {
 		return c.Status(fiber.StatusCreated).JSON(helper.GenerateResponse(res, true))
 	}
+}
+
+func (h *UserHandler) Logout(c *fiber.Ctx) error {
+
+	token := c.Locals(constants.AuthenticationKey).(string)
+	userId := c.Locals(constants.UserIdKey).(string)
+	devId := c.Get(constants.DeviceIdKey)
+
+	parsedUserId, err := uuid.Parse(userId)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(helper.GenerateResponseWithError(&service_errors.ServiceError{EndUserMessage: "user uuid parse failed"}, false))
+
+	}
+	deviceId, err := uuid.Parse(devId)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(helper.GenerateResponseWithError(&service_errors.ServiceError{EndUserMessage: "user device Id parse failed"}, false))
+
+	}
+	req := &dto.UserLogout{
+		UserId:       parsedUserId,
+		UserDeviceID: deviceId,
+		UserIp:       c.IP(),
+		UserToken:    token,
+	}
+	err = h.service.Logout(req)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(helper.GenerateResponse("user logged out failed", false))
+	}
+	return c.Status(fiber.StatusNoContent).JSON(helper.GenerateResponse("user logged out", true))
 }
