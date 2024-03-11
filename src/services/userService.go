@@ -52,6 +52,10 @@ func (us *UserService) CreateUser(req *dto.UserCreateDTO) (err error) {
 	if req.UserPassword != req.UserPasswordConfirm {
 		return &service_errors.ServiceError{EndUserMessage: service_errors.PasswordsDontMatch}
 	}
+	err = common.ValidatePassword(req.UserPassword)
+	if err != nil {
+		return err
+	}
 
 	req.UserPassword, err = HasPassword(req.UserPassword)
 	if err != nil {

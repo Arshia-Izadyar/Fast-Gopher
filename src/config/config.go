@@ -18,7 +18,19 @@ type Config struct {
 	Otp      OtpConfig
 	JWT      JWTConfig
 	Cors     CorseConfig
+	Password PasswordConfig
 }
+
+type PasswordConfig struct {
+	IncludeChars     bool `yaml:"includeChars"`
+	IncludeDigits    bool `yaml:"includeDigits"`
+	MinLength        int  `yaml:"minLength"`
+	Punc             int  `yaml:"punc"`
+	MaxLength        int  `yaml:"maxLength"`
+	IncludeUppercase bool `yaml:"includeUppercase"`
+	IncludeLowercase bool `yaml:"includeLowercase"`
+}
+
 type CorseConfig struct {
 	AllowOrigins string
 }
