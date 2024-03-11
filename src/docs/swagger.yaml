@@ -1,0 +1,218 @@
+basePath: /
+definitions:
+  dto.UserCreateDTO:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+      password_confirm:
+        type: string
+    required:
+    - email
+    - password
+    - password_confirm
+    type: object
+  dto.UserDTO:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  helper.Response:
+    properties:
+      data: {}
+      error:
+        type: string
+      success:
+        type: boolean
+    type: object
+host: localhost:4000
+info:
+  contact:
+    email: arshiaa104@gmail.com
+    name: API Support
+  description: internal service for Auth
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: Kir
+  title: Internal auth
+  version: "0.1"
+paths:
+  /auth/callback/google:
+    get:
+      consumes:
+      - application/json
+      description: login a user
+      responses:
+        "200":
+          description: Create a user response
+          schema:
+            $ref: '#/definitions/helper.Response'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/helper.Response'
+      security:
+      - None: []
+      summary: login a user
+      tags:
+      - User
+  /google:
+    get:
+      consumes:
+      - application/json
+      description: login a user with google
+      responses:
+        "200":
+          description: Create a user response
+          schema:
+            $ref: '#/definitions/helper.Response'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/helper.Response'
+      security:
+      - None: []
+      summary: login a user with google
+      tags:
+      - User
+  /google/login:
+    get:
+      consumes:
+      - application/json
+      description: login a user
+      responses:
+        "200":
+          description: Create a user response
+          schema:
+            $ref: '#/definitions/helper.Response'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/helper.Response'
+      security:
+      - None: []
+      summary: login a user
+      tags:
+      - User
+  /login:
+    post:
+      consumes:
+      - application/json
+      description: login a user
+      parameters:
+      - description: Create a user
+        in: body
+        name: Request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UserDTO'
+      responses:
+        "200":
+          description: Create a user response
+          schema:
+            $ref: '#/definitions/helper.Response'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/helper.Response'
+      security:
+      - None: []
+      summary: login a user
+      tags:
+      - User
+  /logout:
+    get:
+      consumes:
+      - application/json
+      description: Logs out a user by invalidating the user's session.
+      parameters:
+      - description: Authentication Token
+        in: header
+        name: AuthenticationKey
+        required: true
+        type: string
+      - description: Device-Id
+        in: header
+        name: DeviceIdKey
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: 'message: user logged out'
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 'message: error message'
+          schema:
+            additionalProperties: true
+            type: object
+      summary: User logout
+      tags:
+      - User
+  /register:
+    post:
+      consumes:
+      - application/json
+      description: create a new user
+      parameters:
+      - description: Create a user
+        in: body
+        name: Request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UserCreateDTO'
+      responses:
+        "200":
+          description: Create a user response
+          schema:
+            $ref: '#/definitions/helper.Response'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/helper.Response'
+      security:
+      - None: []
+      summary: Create a user
+      tags:
+      - User
+  /w:
+    get:
+      consumes:
+      - application/json
+      description: Adds a device IP and its identifier to the user's whitelist, ensuring
+        the device is allowed to access the service.
+      parameters:
+      - description: Device-Id
+        in: header
+        name: DeviceIdKey
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Successfully whitelisted the device
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - AuthBearer: []
+      summary: Add a device to the whitelist
+      tags:
+      - whitelist
+swagger: "2.0"

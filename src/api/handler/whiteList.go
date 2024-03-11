@@ -21,6 +21,17 @@ func NewWhiteListHandler(cfg *config.Config) *WhiteListHandler {
 	}
 }
 
+// Add godoc
+// @Summary Add a device to the whitelist
+// @Description Adds a device IP and its identifier to the user's whitelist, ensuring the device is allowed to access the service.
+// @Tags whitelist
+// @Accept json
+// @Produce json
+// @Param DeviceIdKey header string true "Device-Id"
+// @Success 201 {object} map[string]interface{} "Successfully whitelisted the device"
+// @Failure 500 {object} map[string]interface{} "Internal Server Error"
+// @Router /w [get]
+// @Security AuthBearer
 func (w *WhiteListHandler) Add(c *fiber.Ctx) error {
 	v := c.Locals(constants.UserIdKey).(string)
 	devId := c.Get(constants.DeviceIdKey)
@@ -42,7 +53,7 @@ func (w *WhiteListHandler) Add(c *fiber.Ctx) error {
 	}
 	err = w.service.WhiteListRequest(req)
 	if err != nil {
-		return c.JSON(fiber.Map{"err": err})
+		return c.Status(fiber.StatusInternalServerError).JSON(helper.GenerateResponseWithError(err, false))
 	}
-	return c.Send([]byte("ok"))
+	return c.Status(fiber.StatusCreated).JSON(helper.GenerateResponse("whitelisted", true))
 }

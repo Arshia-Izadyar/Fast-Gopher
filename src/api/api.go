@@ -5,10 +5,12 @@ import (
 
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/api/router"
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/config"
+	_ "github.com/Arshia-Izadyar/Fast-Gopher/src/docs"
 	"github.com/bytedance/sonic"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/helmet"
 	"github.com/gofiber/fiber/v2/middleware/logger"
+	"github.com/gofiber/swagger"
 )
 
 func InitServer(cfg *config.Config) error {
@@ -20,8 +22,8 @@ func InitServer(cfg *config.Config) error {
 	)
 
 	addMiddleware(app, cfg)
+	swaggerInit(app)
 	registerRouters(app, cfg)
-
 	err := app.Listen(fmt.Sprintf(":%d", cfg.Server.Port))
 	if err != nil {
 		return err
@@ -51,4 +53,10 @@ func addMiddleware(app *fiber.App, cfg *config.Config) {
 	app.Use(logger.New(logger.Config{
 		Format: "[${ip}]:${port} ${status} - ${method} ${path} ${latency}  \n",
 	}))
+}
+
+func swaggerInit(app *fiber.App) {
+
+	app.Get("/swagger/*", swagger.HandlerDefault) // default
+
 }

@@ -9,6 +9,16 @@ import (
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/data/redis"
 )
 
+// @title Internal auth
+// @version 0.1
+// @description internal service for Auth
+// @termsOfService Kir
+// @contact.name API Support
+// @contact.email arshiaa104@gmail.com
+// @license.name Apache 2.0
+// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
+// @host localhost:4000
+// @BasePath /
 func main() {
 	config.LoadConfig()
 	config.LoadGoogleConfig()

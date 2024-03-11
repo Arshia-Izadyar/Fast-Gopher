@@ -29,6 +29,17 @@ func NewUserHandler(cfg *config.Config) *UserHandler {
 	}
 }
 
+// UserRegister godoc
+// @Summary Create a user
+// @Description create a new user
+// @Tags User
+// @Accept json
+// @produces json
+// @Param Request body dto.UserCreateDTO true "Create a user"
+// @Success 200 {object} helper.Response "Create a user response"
+// @Failure 400 {object} helper.Response "Bad request"
+// @Router /register [post]
+// @Security None
 func (uh *UserHandler) TestHandler(c *fiber.Ctx) error {
 	req := &dto.UserCreateDTO{}
 	if err := c.BodyParser(&req); err != nil {
@@ -46,6 +57,17 @@ func (uh *UserHandler) TestHandler(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusCreated).JSON(helper.GenerateResponse("user created", true))
 }
 
+// UserLogin godoc
+// @Summary login a user
+// @Description login a user
+// @Tags User
+// @Accept json
+// @produces json
+// @Param Request body dto.UserDTO true "Create a user"
+// @Success 200 {object} helper.Response "Create a user response"
+// @Failure 400 {object} helper.Response "Bad request"
+// @Router /login [post]
+// @Security None
 func (uh *UserHandler) LoginHandler(c *fiber.Ctx) error {
 	req := &dto.UserDTO{}
 	if err := c.BodyParser(&req); err != nil {
@@ -63,6 +85,16 @@ func (uh *UserHandler) LoginHandler(c *fiber.Ctx) error {
 	}
 }
 
+// GoogleLogin godoc
+// @Summary login a user with google
+// @Description login a user with google
+// @Tags User
+// @Accept json
+// @produces json
+// @Success 200 {object} helper.Response "Create a user response"
+// @Failure 400 {object} helper.Response "Bad request"
+// @Router /google [get]
+// @Security None
 func (uh *UserHandler) GoogleLogin(c *fiber.Ctx) error {
 
 	url := config.AppConfig.GoogleLoginConfig.AuthCodeURL("randomstate")
@@ -72,6 +104,16 @@ func (uh *UserHandler) GoogleLogin(c *fiber.Ctx) error {
 	return c.JSON(url)
 }
 
+// GoogleCallback godoc
+// @Summary login a user
+// @Description login a user
+// @Tags User
+// @Accept json
+// @produces json
+// @Success 200 {object} helper.Response "Create a user response"
+// @Failure 400 {object} helper.Response "Bad request"
+// @Router /google/login [get]
+// @Security None
 func (uh *UserHandler) GoogleCallback(c *fiber.Ctx) error {
 	state := c.Query("state")
 	if state != "randomstate" {
@@ -113,6 +155,16 @@ func (uh *UserHandler) GoogleCallback(c *fiber.Ctx) error {
 	}
 }
 
+// LoginWithGoogleCode godoc
+// @Summary login a user
+// @Description login a user
+// @Tags User
+// @Accept json
+// @produces json
+// @Success 200 {object} helper.Response "Create a user response"
+// @Failure 400 {object} helper.Response "Bad request"
+// @Router /auth/callback/google [get]
+// @Security None
 func (h *UserHandler) LoginWithGoogleCode(c *fiber.Ctx) error {
 	code := c.Query("code", "")
 	req := &dto.GoogleCodeLoginDTO{
@@ -128,6 +180,17 @@ func (h *UserHandler) LoginWithGoogleCode(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusCreated).JSON(helper.GenerateResponse(tk, true))
 }
 
+// Logout godoc
+// @Summary User logout
+// @Description Logs out a user by invalidating the user's session.
+// @Tags User
+// @Accept json
+// @Produce json
+// @Param AuthenticationKey header string true "Authentication Token"
+// @Param DeviceIdKey header string true "Device-Id"
+// @Success 204 {object} map[string]interface{} "message: user logged out"
+// @Failure 400 {object} map[string]interface{} "message: error message"
+// @Router /logout [get]
 func (h *UserHandler) Logout(c *fiber.Ctx) error {
 
 	token := c.Locals(constants.AuthenticationKey).(string)
