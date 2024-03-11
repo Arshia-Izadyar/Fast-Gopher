@@ -9,7 +9,7 @@ logger:
 cors:
   allowOrigins: "*"
 postgres:
-  host: localhost
+  host: "51.195.26.201"
   port: 5432
   user: arshia
   password: a123
