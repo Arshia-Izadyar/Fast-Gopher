@@ -11,6 +11,7 @@ import (
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/pkg/service_errors"
 	"github.com/bytedance/sonic"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/helmet"
 	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"github.com/gofiber/fiber/v2/middleware/logger"
@@ -42,6 +43,12 @@ func registerRouters(app *fiber.App, cfg *config.Config) {
 }
 
 func addMiddleware(app *fiber.App) {
+	app.Use(cors.New(cors.Config{
+		AllowOrigins: "*",
+		AllowMethods: "GET,POST,HEAD,PUT,DELETE,PATCH",
+		AllowHeaders: "Origin, Content-Type, Accept",
+	}))
+
 	app.Use(limiter.New(limiter.Config{
 		Max:        20,
 		Expiration: 60 * time.Second,
@@ -58,12 +65,10 @@ func addMiddleware(app *fiber.App) {
 
 	app.Use(helmet.New())
 	app.Use(logger.New(logger.Config{
-		Format: "[${ip}]:${port} ${status} - ${method} ${path} ${latency}  \n",
+		Format: "[${ip}]:${port} ${status} - ${latency} ${method} ${path} \n",
 	}))
 }
 
 func swaggerInit(app *fiber.App) {
-
 	app.Get("/swagger/*", swagger.HandlerDefault) // default
-
 }

@@ -37,7 +37,7 @@ const docTemplate = `{
                 "tags": [
                     "User"
                 ],
-                "summary": "login a user",
+                "summary": "login a user with Code from google call back",
                 "responses": {
                     "200": {
                         "description": "Create a user response",
@@ -56,11 +56,6 @@ const docTemplate = `{
         },
         "/google": {
             "get": {
-                "security": [
-                    {
-                        "None": []
-                    }
-                ],
                 "description": "login a user with google",
                 "consumes": [
                     "application/json"
@@ -87,11 +82,6 @@ const docTemplate = `{
         },
         "/google/login": {
             "get": {
-                "security": [
-                    {
-                        "None": []
-                    }
-                ],
                 "description": "login a user",
                 "consumes": [
                     "application/json"
@@ -118,11 +108,6 @@ const docTemplate = `{
         },
         "/login": {
             "post": {
-                "security": [
-                    {
-                        "None": []
-                    }
-                ],
                 "description": "login a user",
                 "consumes": [
                     "application/json"
@@ -160,6 +145,11 @@ const docTemplate = `{
         },
         "/logout": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Logs out a user by invalidating the user's session.",
                 "consumes": [
                     "application/json"
@@ -205,13 +195,45 @@ const docTemplate = `{
                 }
             }
         },
-        "/register": {
+        "/refresh": {
             "post": {
-                "security": [
+                "description": "generate a new token from refresh.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "User Refresh",
+                "parameters": [
                     {
-                        "None": []
+                        "description": "Create a new token",
+                        "name": "Request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.RefreshTokenDTO"
+                        }
                     }
                 ],
+                "responses": {
+                    "201": {
+                        "description": "message: new rToken and aToken",
+                        "schema": {
+                            "$ref": "#/definitions/dto.UserTokenDTO"
+                        }
+                    },
+                    "400": {
+                        "description": "message: error message",
+                        "schema": {
+                            "$ref": "#/definitions/helper.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/register": {
+            "post": {
                 "description": "create a new user",
                 "consumes": [
                     "application/json"
@@ -247,6 +269,49 @@ const docTemplate = `{
                 }
             }
         },
+        "/rw": {
+            "get": {
+                "security": [
+                    {
+                        "AuthBearer": []
+                    }
+                ],
+                "description": "removes a device IP and its identifier to the user's whitelist, ensuring the device is not allowed to access the service.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Whitelist"
+                ],
+                "summary": "remove a device to the whitelist",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Device-Id",
+                        "name": "DeviceIdKey",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Successfully whitelisted the device",
+                        "schema": {
+                            "$ref": "#/definitions/helper.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/helper.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/w": {
             "get": {
                 "security": [
@@ -262,14 +327,14 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "whitelist"
+                    "Whitelist"
                 ],
                 "summary": "Add a device to the whitelist",
                 "parameters": [
                     {
                         "type": "string",
                         "description": "Device-Id",
-                        "name": "DeviceIdKey",
+                        "name": "Device-Id",
                         "in": "header",
                         "required": true
                     }
@@ -278,15 +343,13 @@ const docTemplate = `{
                     "201": {
                         "description": "Successfully whitelisted the device",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/helper.Response"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/helper.Response"
                         }
                     }
                 }
@@ -294,6 +357,17 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "dto.RefreshTokenDTO": {
+            "type": "object",
+            "required": [
+                "refresh_token"
+            ],
+            "properties": {
+                "refresh_token": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.UserCreateDTO": {
             "type": "object",
             "required": [
@@ -328,6 +402,17 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.UserTokenDTO": {
+            "type": "object",
+            "properties": {
+                "access_token": {
+                    "type": "string"
+                },
+                "refresh_token": {
+                    "type": "string"
+                }
+            }
+        },
         "helper.Response": {
             "type": "object",
             "properties": {
@@ -339,6 +424,13 @@ const docTemplate = `{
                     "type": "boolean"
                 }
             }
+        }
+    },
+    "securityDefinitions": {
+        "ApiKeyAuth": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
         }
     }
 }`

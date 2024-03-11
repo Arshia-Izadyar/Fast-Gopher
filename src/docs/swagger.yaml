@@ -1,5 +1,12 @@
 basePath: /
 definitions:
+  dto.RefreshTokenDTO:
+    properties:
+      refresh_token:
+        type: string
+    required:
+    - refresh_token
+    type: object
   dto.UserCreateDTO:
     properties:
       email:
@@ -22,6 +29,13 @@ definitions:
     required:
     - email
     - password
+    type: object
+  dto.UserTokenDTO:
+    properties:
+      access_token:
+        type: string
+      refresh_token:
+        type: string
     type: object
   helper.Response:
     properties:
@@ -60,7 +74,7 @@ paths:
             $ref: '#/definitions/helper.Response'
       security:
       - None: []
-      summary: login a user
+      summary: login a user with Code from google call back
       tags:
       - User
   /google:
@@ -77,8 +91,6 @@ paths:
           description: Bad request
           schema:
             $ref: '#/definitions/helper.Response'
-      security:
-      - None: []
       summary: login a user with google
       tags:
       - User
@@ -96,8 +108,6 @@ paths:
           description: Bad request
           schema:
             $ref: '#/definitions/helper.Response'
-      security:
-      - None: []
       summary: login a user
       tags:
       - User
@@ -122,8 +132,6 @@ paths:
           description: Bad request
           schema:
             $ref: '#/definitions/helper.Response'
-      security:
-      - None: []
       summary: login a user
       tags:
       - User
@@ -156,7 +164,33 @@ paths:
           schema:
             additionalProperties: true
             type: object
+      security:
+      - ApiKeyAuth: []
       summary: User logout
+      tags:
+      - User
+  /refresh:
+    post:
+      description: generate a new token from refresh.
+      parameters:
+      - description: Create a new token
+        in: body
+        name: Request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.RefreshTokenDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: 'message: new rToken and aToken'
+          schema:
+            $ref: '#/definitions/dto.UserTokenDTO'
+        "400":
+          description: 'message: error message'
+          schema:
+            $ref: '#/definitions/helper.Response'
+      summary: User Refresh
       tags:
       - User
   /register:
@@ -180,17 +214,15 @@ paths:
           description: Bad request
           schema:
             $ref: '#/definitions/helper.Response'
-      security:
-      - None: []
       summary: Create a user
       tags:
       - User
-  /w:
+  /rw:
     get:
       consumes:
       - application/json
-      description: Adds a device IP and its identifier to the user's whitelist, ensuring
-        the device is allowed to access the service.
+      description: removes a device IP and its identifier to the user's whitelist,
+        ensuring the device is not allowed to access the service.
       parameters:
       - description: Device-Id
         in: header
@@ -203,16 +235,47 @@ paths:
         "201":
           description: Successfully whitelisted the device
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/helper.Response'
         "500":
           description: Internal Server Error
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/helper.Response'
+      security:
+      - AuthBearer: []
+      summary: remove a device to the whitelist
+      tags:
+      - Whitelist
+  /w:
+    get:
+      consumes:
+      - application/json
+      description: Adds a device IP and its identifier to the user's whitelist, ensuring
+        the device is allowed to access the service.
+      parameters:
+      - description: Device-Id
+        in: header
+        name: Device-Id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Successfully whitelisted the device
+          schema:
+            $ref: '#/definitions/helper.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helper.Response'
       security:
       - AuthBearer: []
       summary: Add a device to the whitelist
       tags:
-      - whitelist
+      - Whitelist
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

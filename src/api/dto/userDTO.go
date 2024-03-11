@@ -24,3 +24,7 @@ type UserLogout struct {
 	UserIp       string    `json:"user_ip"`
 	UserToken    string    `json:"user_token"`
 }
+
+type RefreshTokenDTO struct {
+	RefreshToken string `json:"refresh_token" validate:"required"`
+}

@@ -11,6 +11,7 @@ import (
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/api/dto"
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/common"
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/config"
+	"github.com/Arshia-Izadyar/Fast-Gopher/src/constants"
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/data/models"
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/data/postgres"
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/data/redis"
@@ -188,4 +189,39 @@ func (us *UserService) Logout(req *dto.UserLogout) error {
 	}
 	// TODO: send command to remove from whitelist
 	return nil
+}
+
+// refresh
+func (us *UserService) Refresh(req *dto.RefreshTokenDTO) (*dto.UserTokenDTO, error) {
+
+	// 1. check if refresh is used
+	// 2. check if its is a refresh
+	// 3. blacklist refresh
+	// 4. issue new jwt
+
+	claims, err := common.ValidateToken(req.RefreshToken, us.cfg)
+	if err != nil {
+		return nil, err
+	}
+	if claims[constants.AccessType] == true {
+		return nil, &service_errors.ServiceError{EndUserMessage: service_errors.NotRefreshToken}
+	}
+
+	_, err = redis.Get[bool](req.RefreshToken)
+	if err == nil {
+		return nil, &service_errors.ServiceError{EndUserMessage: service_errors.TokenInvalid}
+	}
+
+	go func() {
+		redis.Set[bool](req.RefreshToken, true, time.Minute*us.cfg.JWT.RefreshTokenExpireDuration)
+	}()
+	userUUid, err := uuid.Parse(claims[constants.UserIdKey].(string))
+	if err != nil {
+		return nil, &service_errors.ServiceError{EndUserMessage: service_errors.InternalError, Err: err}
+	}
+	res, err := common.GenerateJwt(userUUid, us.cfg)
+	if err != nil {
+		return nil, &service_errors.ServiceError{EndUserMessage: service_errors.InternalError, Err: err}
+	}
+	return res, nil
 }

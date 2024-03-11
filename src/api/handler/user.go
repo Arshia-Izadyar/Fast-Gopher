@@ -39,7 +39,6 @@ func NewUserHandler(cfg *config.Config) *UserHandler {
 // @Success 200 {object} helper.Response "Create a user response"
 // @Failure 400 {object} helper.Response "Bad request"
 // @Router /register [post]
-// @Security None
 func (uh *UserHandler) TestHandler(c *fiber.Ctx) error {
 	req := &dto.UserCreateDTO{}
 	if err := c.BodyParser(&req); err != nil {
@@ -67,7 +66,6 @@ func (uh *UserHandler) TestHandler(c *fiber.Ctx) error {
 // @Success 200 {object} helper.Response "Create a user response"
 // @Failure 400 {object} helper.Response "Bad request"
 // @Router /login [post]
-// @Security None
 func (uh *UserHandler) LoginHandler(c *fiber.Ctx) error {
 	req := &dto.UserDTO{}
 	if err := c.BodyParser(&req); err != nil {
@@ -94,7 +92,6 @@ func (uh *UserHandler) LoginHandler(c *fiber.Ctx) error {
 // @Success 200 {object} helper.Response "Create a user response"
 // @Failure 400 {object} helper.Response "Bad request"
 // @Router /google [get]
-// @Security None
 func (uh *UserHandler) GoogleLogin(c *fiber.Ctx) error {
 
 	url := config.AppConfig.GoogleLoginConfig.AuthCodeURL("randomstate")
@@ -113,7 +110,6 @@ func (uh *UserHandler) GoogleLogin(c *fiber.Ctx) error {
 // @Success 200 {object} helper.Response "Create a user response"
 // @Failure 400 {object} helper.Response "Bad request"
 // @Router /google/login [get]
-// @Security None
 func (uh *UserHandler) GoogleCallback(c *fiber.Ctx) error {
 	state := c.Query("state")
 	if state != "randomstate" {
@@ -156,7 +152,7 @@ func (uh *UserHandler) GoogleCallback(c *fiber.Ctx) error {
 }
 
 // LoginWithGoogleCode godoc
-// @Summary login a user
+// @Summary login a user with Code from google call back
 // @Description login a user
 // @Tags User
 // @Accept json
@@ -191,6 +187,7 @@ func (h *UserHandler) LoginWithGoogleCode(c *fiber.Ctx) error {
 // @Success 204 {object} map[string]interface{} "message: user logged out"
 // @Failure 400 {object} map[string]interface{} "message: error message"
 // @Router /logout [get]
+// @Security ApiKeyAuth
 func (h *UserHandler) Logout(c *fiber.Ctx) error {
 
 	token := c.Locals(constants.AuthenticationKey).(string)
@@ -218,4 +215,30 @@ func (h *UserHandler) Logout(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(helper.GenerateResponse("user logged out failed", false))
 	}
 	return c.Status(fiber.StatusNoContent).JSON(helper.GenerateResponse("user logged out", true))
+}
+
+// Refresh godoc
+// @Summary User Refresh
+// @Description generate a new token from refresh.
+// @Tags User
+// @Produce json
+// @Param Request body dto.RefreshTokenDTO true "Create a new token"
+// @Success 201 {object} dto.UserTokenDTO "message: new rToken and aToken"
+// @Failure 400 {object} helper.Response "message: error message"
+// @Router /refresh [POST]
+func (h *UserHandler) Refresh(c *fiber.Ctx) error {
+	req := &dto.RefreshTokenDTO{}
+	err := c.BodyParser(&req)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(helper.GenerateResponseWithError(&service_errors.ServiceError{EndUserMessage: "cant parse body", Err: err}, false))
+	}
+	if err := validate.Struct(req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(helper.GenerateResponseWithValidationError(err, false))
+	}
+
+	res, err := h.service.Refresh(req)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(helper.GenerateResponseWithError(err, false))
+	}
+	return c.Status(fiber.StatusCreated).JSON(helper.GenerateResponse(res, true))
 }
