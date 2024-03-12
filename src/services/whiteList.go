@@ -103,7 +103,7 @@ func (wl *WhiteListService) WhiteListRemove(req *dto.WhiteListAddDTO) error {
 	}
 
 	q := `
-	DELETE FROM active_devices where user_id = $1 AND device_id = $2
+	DELETE FROM active_devices where user_id = $1 AND device_id = $2;
 	`
 
 	if _, err = tx.Exec(q, req.UserId, req.UserDeviceID); err != nil {

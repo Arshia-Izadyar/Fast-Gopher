@@ -28,3 +28,21 @@ type UserLogout struct {
 type RefreshTokenDTO struct {
 	RefreshToken string `json:"refresh_token" validate:"required"`
 }
+
+type ResetPasswordDTO struct {
+	UserId             string `json:"-"`
+	CurrentPassword    string `json:"current_password" validate:"required"`
+	NewPassword        string `json:"new_password" validate:"required"`
+	NewPasswordConfirm string `json:"new_password_confirm" validate:"required"`
+}
+
+type ForgotPasswordOtpDTO struct {
+	Email string `json:"email" validate:"required,email"`
+}
+
+type ForgotPasswordDTO struct {
+	Otp                string `json:"otp"`
+	Email              string `json:"email"`
+	NewPassword        string `json:"new_password"`
+	NewPasswordConfirm string `json:"new_password_confirm"`
+}

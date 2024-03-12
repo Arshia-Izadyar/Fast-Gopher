@@ -31,7 +31,7 @@ func GenerateJwt(userId uuid.UUID, cfg *config.Config) (*dto.UserTokenDTO, error
 		constants.AccessType: true,
 	}
 
-	// Using pre-compiled signing method
+	// Using pre compiled signing method
 	tk := jwt.NewWithClaims(signingMethod, atClaims)
 	var err error
 	res.AccessToken, err = tk.SignedString([]byte(cfg.JWT.Secret))

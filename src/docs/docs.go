@@ -54,6 +54,80 @@ const docTemplate = `{
                 }
             }
         },
+        "/forgot": {
+            "post": {
+                "description": "password forget.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "User password forget",
+                "parameters": [
+                    {
+                        "description": "change users password",
+                        "name": "Request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.ForgotPasswordDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "message: password changed",
+                        "schema": {
+                            "$ref": "#/definitions/helper.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "message: error message",
+                        "schema": {
+                            "$ref": "#/definitions/helper.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/forgot/otp": {
+            "post": {
+                "description": "send otp for password forget.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "User password rest",
+                "parameters": [
+                    {
+                        "description": "send a otp for forgot password",
+                        "name": "Request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.ForgotPasswordOtpDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "message: password otp sent",
+                        "schema": {
+                            "$ref": "#/definitions/helper.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "message: error message",
+                        "schema": {
+                            "$ref": "#/definitions/helper.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/google": {
             "get": {
                 "description": "login a user with google",
@@ -269,6 +343,43 @@ const docTemplate = `{
                 }
             }
         },
+        "/reset": {
+            "put": {
+                "description": "Reset User password.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "User Refresh",
+                "parameters": [
+                    {
+                        "description": "request for password change",
+                        "name": "Request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.ResetPasswordDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "202": {
+                        "description": "message: password Changed",
+                        "schema": {
+                            "$ref": "#/definitions/helper.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "message: error message",
+                        "schema": {
+                            "$ref": "#/definitions/helper.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/rw": {
             "get": {
                 "security": [
@@ -357,6 +468,34 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "dto.ForgotPasswordDTO": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "new_password": {
+                    "type": "string"
+                },
+                "new_password_confirm": {
+                    "type": "string"
+                },
+                "otp": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.ForgotPasswordOtpDTO": {
+            "type": "object",
+            "required": [
+                "email"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.RefreshTokenDTO": {
             "type": "object",
             "required": [
@@ -364,6 +503,25 @@ const docTemplate = `{
             ],
             "properties": {
                 "refresh_token": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.ResetPasswordDTO": {
+            "type": "object",
+            "required": [
+                "current_password",
+                "new_password",
+                "new_password_confirm"
+            ],
+            "properties": {
+                "current_password": {
+                    "type": "string"
+                },
+                "new_password": {
+                    "type": "string"
+                },
+                "new_password_confirm": {
                     "type": "string"
                 }
             }
@@ -429,7 +587,7 @@ const docTemplate = `{
     "securityDefinitions": {
         "ApiKeyAuth": {
             "type": "apiKey",
-            "name": "Authorization",
+            "name": "authorization",
             "in": "header"
         }
     }

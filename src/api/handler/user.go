@@ -2,11 +2,13 @@ package handler
 
 import (
 	"context"
+	"errors"
 	"io"
 	"net/http"
 
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/api/dto"
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/api/helper"
+	"github.com/Arshia-Izadyar/Fast-Gopher/src/common"
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/config"
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/constants"
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/pkg/service_errors"
@@ -240,4 +242,92 @@ func (h *UserHandler) Refresh(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(helper.GenerateResponseWithError(err, false))
 	}
 	return c.Status(fiber.StatusCreated).JSON(helper.GenerateResponse(res, true))
+}
+
+// Reset godoc
+// @Summary User Refresh
+// @Description Reset User password.
+// @Tags User
+// @Produce json
+// @Param Request body dto.ResetPasswordDTO true "request for password change"
+// @Success 202 {object} helper.Response "message: password Changed"
+// @Failure 400 {object} helper.Response "message: error message"
+// @Router /reset [PUT]
+func (h *UserHandler) ResetPassword(c *fiber.Ctx) error {
+	req := &dto.ResetPasswordDTO{}
+	err := c.BodyParser(&req)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(helper.GenerateResponseWithError(&service_errors.ServiceError{EndUserMessage: "cant parse body", Err: err}, false))
+	}
+	if err := validate.Struct(req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(helper.GenerateResponseWithValidationError(err, false))
+	}
+	err = common.ValidatePassword(req.NewPassword)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(helper.GenerateResponseWithError(err, false))
+	}
+	if req.NewPassword != req.NewPasswordConfirm {
+		return c.Status(fiber.StatusBadRequest).JSON(helper.GenerateResponseWithError(&service_errors.ServiceError{EndUserMessage: service_errors.PasswordsDontMatch}, false))
+	}
+
+	req.UserId = c.Locals(constants.UserIdKey).(string)
+
+	if sErr := h.service.ResetPassword(req); sErr != nil {
+		return c.Status(sErr.Status).JSON(helper.GenerateResponseWithError(sErr, false))
+	}
+	return c.Status(fiber.StatusAccepted).JSON(helper.GenerateResponse("password Changed!", true))
+}
+
+// forgotPasswordOTP godoc
+// @Summary User password rest
+// @Description send otp for password forget.
+// @Tags User
+// @Produce json
+// @Param Request body dto.ForgotPasswordOtpDTO true "send a otp for forgot password"
+// @Success 200 {object} helper.Response "message: password otp sent"
+// @Failure 400 {object} helper.Response "message: error message"
+// @Router /forgot/otp [POST]
+func (h *UserHandler) ForgotPasswordOtp(c *fiber.Ctx) error {
+	req := &dto.ForgotPasswordOtpDTO{}
+	c.BodyParser(&req)
+
+	if err := validate.Struct(req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(helper.GenerateResponseWithValidationError(err, false))
+	}
+
+	if sErr := h.service.ForgotPasswordOtp(req); sErr != nil {
+		return c.Status(sErr.Status).JSON(helper.GenerateResponseWithError(sErr, false))
+	}
+	return c.Status(fiber.StatusOK).JSON(helper.GenerateResponse("password otp sent!", true))
+}
+
+// forgotPassword godoc
+// @Summary User password forget
+// @Description password forget.
+// @Tags User
+// @Produce json
+// @Param Request body dto.ForgotPasswordDTO true "change users password"
+// @Success 201 {object} helper.Response "message: password changed"
+// @Failure 400 {object} helper.Response "message: error message"
+// @Router /forgot [POST]
+func (h *UserHandler) ForgotPassword(c *fiber.Ctx) error {
+	req := &dto.ForgotPasswordDTO{}
+	c.BodyParser(&req)
+
+	err := common.ValidatePassword(req.NewPassword)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(helper.GenerateResponseWithError(err, false))
+	}
+	if err := validate.Struct(req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(helper.GenerateResponseWithValidationError(err, false))
+	}
+
+	if req.NewPassword != req.NewPasswordConfirm {
+		return c.Status(fiber.StatusBadRequest).JSON(helper.GenerateResponseWithValidationError(errors.New("passwords don't match"), false))
+	}
+
+	if sErr := h.service.ForgotPassword(req); sErr != nil {
+		return c.Status(sErr.Status).JSON(helper.GenerateResponseWithError(sErr, false))
+	}
+	return c.Status(fiber.StatusAccepted).JSON(helper.GenerateResponse("password changed", true))
 }

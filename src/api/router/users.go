@@ -13,6 +13,9 @@ func UserRouter(app *fiber.App, cfg *config.Config) {
 	app.Post("/login", h.LoginHandler)
 	app.Get("/logout", authentication.New(cfg), h.Logout)
 	app.Post("/refresh", h.Refresh)
+	app.Post("/forgot/otp", h.ForgotPasswordOtp)
+	app.Post("/forgot", h.ForgotPassword)
+	app.Put("/reset", authentication.New(cfg), h.ResetPassword)
 	app.Get("/google/login", h.GoogleLogin)
 	app.Get("/auth/callback/google", h.LoginWithGoogleCode)
 }

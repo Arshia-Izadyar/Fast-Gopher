@@ -12,9 +12,9 @@ import (
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/common"
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/config"
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/constants"
+	"github.com/Arshia-Izadyar/Fast-Gopher/src/data/cache"
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/data/models"
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/data/postgres"
-	"github.com/Arshia-Izadyar/Fast-Gopher/src/data/redis"
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/pkg/service_errors"
 	"github.com/bytedance/sonic"
 
@@ -27,15 +27,18 @@ type UserService struct {
 	db               *sql.DB
 	cfg              *config.Config
 	whiteListService *WhiteListService
+	otpService       *OtpService
 }
 
 func NewUserService(cfg *config.Config) *UserService {
 	db := postgres.GetDB()
 	wl := NewWhiteListService(cfg)
+	os := NewOtpService(cfg)
 	return &UserService{
 		db:               db,
 		cfg:              cfg,
 		whiteListService: wl,
+		otpService:       os,
 	}
 }
 
@@ -173,7 +176,7 @@ func (us *UserService) GoogleLoginWithCode(req *dto.GoogleCodeLoginDTO) (*dto.Us
 
 func (us *UserService) Logout(req *dto.UserLogout) error {
 
-	err := redis.Set[bool](req.UserToken, true, us.cfg.JWT.AccessTokenExpireDuration*time.Minute)
+	err := cache.Set[bool](req.UserToken, true, us.cfg.JWT.AccessTokenExpireDuration*time.Minute)
 	if err != nil {
 		return err
 	}
@@ -206,13 +209,13 @@ func (us *UserService) Refresh(req *dto.RefreshTokenDTO) (*dto.UserTokenDTO, err
 		return nil, &service_errors.ServiceError{EndUserMessage: service_errors.NotRefreshToken}
 	}
 
-	_, err = redis.Get[bool](req.RefreshToken)
+	_, err = cache.Get[bool](req.RefreshToken)
 	if err == nil {
 		return nil, &service_errors.ServiceError{EndUserMessage: service_errors.TokenInvalid}
 	}
 
 	go func() {
-		redis.Set[bool](req.RefreshToken, true, time.Minute*us.cfg.JWT.RefreshTokenExpireDuration)
+		cache.Set[bool](req.RefreshToken, true, time.Minute*us.cfg.JWT.RefreshTokenExpireDuration)
 	}()
 	userUUid, err := uuid.Parse(claims[constants.UserIdKey].(string))
 	if err != nil {
@@ -223,4 +226,83 @@ func (us *UserService) Refresh(req *dto.RefreshTokenDTO) (*dto.UserTokenDTO, err
 		return nil, &service_errors.ServiceError{EndUserMessage: "JWT generation gone wrong", Err: err}
 	}
 	return res, nil
+}
+
+func (u *UserService) ResetPassword(req *dto.ResetPasswordDTO) *service_errors.ServiceErrors {
+	tx, err := u.db.Begin()
+	if err != nil {
+		return &service_errors.ServiceErrors{EndUserMessage: service_errors.InternalError, Status: 500, Err: err}
+	}
+
+	getUserQ := `
+		SELECT user_password FROM users WHERE id = $1
+	`
+
+	var userPassword string
+	err = tx.QueryRow(getUserQ, req.UserId).Scan(&userPassword)
+	if err != nil {
+		return &service_errors.ServiceErrors{EndUserMessage: "user not Fount", Status: 404}
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(userPassword), []byte(req.CurrentPassword))
+	if err != nil {
+		return &service_errors.ServiceErrors{EndUserMessage: "current password is wrong", Status: 400}
+	}
+
+	newPassword, err := HashPassword(req.NewPassword)
+	if err != nil {
+		return &service_errors.ServiceErrors{EndUserMessage: service_errors.InternalError, Status: 500, Err: err}
+	}
+	q := `
+		UPDATE users SET user_password = $1 WHERE id = $2;
+	`
+
+	err = tx.QueryRow(q, newPassword, req.UserId).Err()
+	if err != nil {
+		tx.Rollback()
+		return &service_errors.ServiceErrors{EndUserMessage: "can't update users password right now", Status: 500}
+
+	}
+	tx.Commit()
+	return nil
+}
+
+func (u *UserService) ForgotPasswordOtp(req *dto.ForgotPasswordOtpDTO) *service_errors.ServiceErrors {
+
+	otp := common.GenerateOtp()
+	fmt.Println(otp)
+	err := u.otpService.SendOtp(&dto.SendOtpDTO{
+		Email: req.Email,
+		Otp:   otp,
+	})
+	if err != nil {
+		return &service_errors.ServiceErrors{EndUserMessage: err.Error(), Status: err.Status}
+	}
+
+	return nil
+}
+
+func (u *UserService) ForgotPassword(req *dto.ForgotPasswordDTO) *service_errors.ServiceErrors {
+	err := u.otpService.ValidateOtp(req.Email, req.Otp)
+	if err != nil {
+		return &service_errors.ServiceErrors{EndUserMessage: service_errors.OtpInvalid, Status: 400}
+	}
+	q := `
+		UPDATE users SET user_password = $1 WHERE email = $2;
+	`
+	newPassword, err := HashPassword(req.NewPassword)
+	if err != nil {
+		return &service_errors.ServiceErrors{EndUserMessage: service_errors.InternalError, Status: 500}
+	}
+	tx, err := u.db.Begin()
+	if err != nil {
+		return &service_errors.ServiceErrors{EndUserMessage: service_errors.InternalError, Status: 500}
+	}
+	err = tx.QueryRow(q, newPassword, req.Email).Err()
+	if err != nil {
+		tx.Rollback()
+		return &service_errors.ServiceErrors{EndUserMessage: "can't update users password right now", Status: 500}
+	}
+	tx.Commit()
+	return nil
 }

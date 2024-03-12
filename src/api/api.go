@@ -2,18 +2,15 @@ package api
 
 import (
 	"fmt"
-	"time"
 
-	"github.com/Arshia-Izadyar/Fast-Gopher/src/api/helper"
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/api/router"
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/config"
 	_ "github.com/Arshia-Izadyar/Fast-Gopher/src/docs"
-	"github.com/Arshia-Izadyar/Fast-Gopher/src/pkg/service_errors"
 	"github.com/bytedance/sonic"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
-	"github.com/gofiber/fiber/v2/middleware/helmet"
-	"github.com/gofiber/fiber/v2/middleware/limiter"
+
+	// "github.com/gofiber/fiber/v2/middleware/limiter"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/swagger"
 )
@@ -49,21 +46,21 @@ func addMiddleware(app *fiber.App) {
 		AllowHeaders: "Origin, Content-Type, Accept",
 	}))
 
-	app.Use(limiter.New(limiter.Config{
-		Max:        20,
-		Expiration: 60 * time.Second,
-		LimitReached: func(c *fiber.Ctx) error {
-			return c.Status(fiber.StatusTooManyRequests).JSON(helper.GenerateResponseWithError(&service_errors.ServiceError{EndUserMessage: "too many requests"}, false))
-		},
-		SkipFailedRequests:     false,
-		SkipSuccessfulRequests: false,
-		Storage:                nil,
-		LimiterMiddleware:      limiter.SlidingWindow{},
-		Duration:               0,
-		Store:                  nil,
-	}))
+	// app.Use(limiter.New(limiter.Config{
+	// 	Max:        20,
+	// 	Expiration: 60 * time.Second,
+	// 	LimitReached: func(c *fiber.Ctx) error {
+	// 		return c.Status(fiber.StatusTooManyRequests).JSON(helper.GenerateResponseWithError(&service_errors.ServiceError{EndUserMessage: "too many requests"}, false))
+	// 	},
+	// 	SkipFailedRequests:     false,
+	// 	SkipSuccessfulRequests: false,
+	// 	Storage:                nil,
+	// 	LimiterMiddleware:      limiter.SlidingWindow{},
+	// 	Duration:               0,
+	// 	Store:                  nil,
+	// }))
 
-	app.Use(helmet.New())
+	// app.Use(helmet.New())
 	app.Use(logger.New(logger.Config{
 		Format: "[${ip}]:${port} ${status} - ${latency} ${method} ${path} \n",
 	}))

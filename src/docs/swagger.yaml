@@ -1,11 +1,42 @@
 basePath: /
 definitions:
+  dto.ForgotPasswordDTO:
+    properties:
+      email:
+        type: string
+      new_password:
+        type: string
+      new_password_confirm:
+        type: string
+      otp:
+        type: string
+    type: object
+  dto.ForgotPasswordOtpDTO:
+    properties:
+      email:
+        type: string
+    required:
+    - email
+    type: object
   dto.RefreshTokenDTO:
     properties:
       refresh_token:
         type: string
     required:
     - refresh_token
+    type: object
+  dto.ResetPasswordDTO:
+    properties:
+      current_password:
+        type: string
+      new_password:
+        type: string
+      new_password_confirm:
+        type: string
+    required:
+    - current_password
+    - new_password
+    - new_password_confirm
     type: object
   dto.UserCreateDTO:
     properties:
@@ -75,6 +106,54 @@ paths:
       security:
       - None: []
       summary: login a user with Code from google call back
+      tags:
+      - User
+  /forgot:
+    post:
+      description: password forget.
+      parameters:
+      - description: change users password
+        in: body
+        name: Request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ForgotPasswordDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: 'message: password changed'
+          schema:
+            $ref: '#/definitions/helper.Response'
+        "400":
+          description: 'message: error message'
+          schema:
+            $ref: '#/definitions/helper.Response'
+      summary: User password forget
+      tags:
+      - User
+  /forgot/otp:
+    post:
+      description: send otp for password forget.
+      parameters:
+      - description: send a otp for forgot password
+        in: body
+        name: Request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ForgotPasswordOtpDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'message: password otp sent'
+          schema:
+            $ref: '#/definitions/helper.Response'
+        "400":
+          description: 'message: error message'
+          schema:
+            $ref: '#/definitions/helper.Response'
+      summary: User password rest
       tags:
       - User
   /google:
@@ -217,6 +296,30 @@ paths:
       summary: Create a user
       tags:
       - User
+  /reset:
+    put:
+      description: Reset User password.
+      parameters:
+      - description: request for password change
+        in: body
+        name: Request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ResetPasswordDTO'
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: 'message: password Changed'
+          schema:
+            $ref: '#/definitions/helper.Response'
+        "400":
+          description: 'message: error message'
+          schema:
+            $ref: '#/definitions/helper.Response'
+      summary: User Refresh
+      tags:
+      - User
   /rw:
     get:
       consumes:
@@ -276,6 +379,6 @@ paths:
 securityDefinitions:
   ApiKeyAuth:
     in: header
-    name: Authorization
+    name: authorization
     type: apiKey
 swagger: "2.0"

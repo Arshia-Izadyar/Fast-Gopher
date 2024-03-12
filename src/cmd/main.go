@@ -5,8 +5,8 @@ import (
 
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/api"
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/config"
+	"github.com/Arshia-Izadyar/Fast-Gopher/src/data/cache"
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/data/postgres"
-	"github.com/Arshia-Izadyar/Fast-Gopher/src/data/redis"
 )
 
 // @title Internal auth
@@ -21,13 +21,13 @@ import (
 // @BasePath /
 // @securityDefinitions.apikey ApiKeyAuth
 // @in header
-// @name Authorization
+// @name authorization
 func main() {
 	config.LoadConfig()
 	config.LoadGoogleConfig()
 	cfg := config.GetConfig()
 
-	err := redis.InitRedis(cfg)
+	err := cache.InitRedis(cfg)
 	if err != nil {
 		log.Fatal(err)
 	}
