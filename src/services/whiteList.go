@@ -35,7 +35,7 @@ func (wl *WhiteListService) WhiteListRequest(req *dto.WhiteListAddDTO) error {
 
 	tx, err := wl.db.Begin()
 	if err != nil {
-		return &service_errors.ServiceError{EndUserMessage: service_errors.InternalError, Err: err}
+		return &service_errors.ServiceError{EndUserMessage: err.Error(), Err: err}
 	}
 
 	insQ := `
@@ -47,7 +47,7 @@ func (wl *WhiteListService) WhiteListRequest(req *dto.WhiteListAddDTO) error {
 	if _, err := tx.Exec(insQ, req.UserDeviceID, req.UserId, req.UserIp); err != nil {
 		tx.Rollback()
 		fmt.Println(err)
-		return &service_errors.ServiceError{EndUserMessage: service_errors.InternalError, Err: err}
+		return &service_errors.ServiceError{EndUserMessage: err.Error(), Err: err}
 	}
 	go func() {
 		wl.whiteListAdd(req) // run in background
@@ -60,7 +60,7 @@ func (wl *WhiteListService) whiteListAdd(req *dto.WhiteListAddDTO) error {
 	userId := req.UserId
 	tx, err := wl.db.Begin()
 	if err != nil {
-		return &service_errors.ServiceError{EndUserMessage: service_errors.InternalError, Err: err}
+		return &service_errors.ServiceError{EndUserMessage: err.Error(), Err: err}
 	}
 
 	var count int
@@ -70,7 +70,7 @@ func (wl *WhiteListService) whiteListAdd(req *dto.WhiteListAddDTO) error {
 	err = tx.QueryRow(countQ, userId).Scan(&count)
 	if err != nil {
 		tx.Rollback()
-		return &service_errors.ServiceError{EndUserMessage: service_errors.InternalError, Err: err}
+		return &service_errors.ServiceError{EndUserMessage: err.Error(), Err: err}
 	}
 
 	if count > 5 {
@@ -84,7 +84,7 @@ func (wl *WhiteListService) whiteListAdd(req *dto.WhiteListAddDTO) error {
 			)`
 		if _, err := tx.Exec(rmQ, userId); err != nil {
 			tx.Rollback()
-			return &service_errors.ServiceError{EndUserMessage: service_errors.InternalError, Err: err}
+			return &service_errors.ServiceError{EndUserMessage: err.Error(), Err: err}
 		}
 		tx.Commit()
 	}
