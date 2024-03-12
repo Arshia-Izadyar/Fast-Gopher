@@ -44,7 +44,7 @@ func (wl *WhiteListService) WhiteListRequest(req *dto.WhiteListAddDTO) error {
     ON CONFLICT (device_id, user_id) DO UPDATE
     SET ips = EXCLUDED.ips;
 	`
-	err := wl.db.QueryRow(insQ, req.UserDeviceID, req.UserId, req.UserIp).Scan()
+	_, err := wl.db.Exec(insQ, req.UserDeviceID, req.UserId, req.UserIp)
 	if err != nil {
 		// tx.Rollback()
 		fmt.Println(err)
@@ -84,7 +84,7 @@ func (wl *WhiteListService) whiteListAdd(req *dto.WhiteListAddDTO) error {
 				ORDER BY created_at ASC
 				LIMIT 1
 			)`
-		if err := wl.db.QueryRow(rmQ, userId).Scan(); err != nil {
+		if _, err := wl.db.Exec(rmQ, userId); err != nil {
 			// tx.Rollback()
 			return &service_errors.ServiceError{EndUserMessage: "c : " + err.Error(), Err: err}
 		}

@@ -3,6 +3,7 @@ package postgres
 import (
 	"database/sql"
 	"fmt"
+	"time"
 
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/config"
 	_ "github.com/lib/pq"
@@ -25,6 +26,14 @@ func ConnectDB(cfg *config.Config) (*sql.DB, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	db.SetMaxOpenConns(2500)
+
+	// Set maximum number of idle connections in the pool.
+	db.SetMaxIdleConns(100)
+
+	// Set maximum lifetime of a connection.
+	db.SetConnMaxLifetime(5 * time.Minute)
 
 	if err = db.Ping(); err != nil {
 		return nil, err
