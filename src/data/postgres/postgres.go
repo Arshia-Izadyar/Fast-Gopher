@@ -27,11 +27,11 @@ func ConnectDB(cfg *config.Config) (*sql.DB, error) {
 		return nil, err
 	}
 
-	db.SetMaxOpenConns(2500)
+	db.SetMaxOpenConns(500)
 
 	// Set maximum number of idle connections in the pool.
-	db.SetMaxIdleConns(100)
-
+	db.SetMaxIdleConns(300)
+	db.SetConnMaxIdleTime(10 * time.Minute)
 	// Set maximum lifetime of a connection.
 	db.SetConnMaxLifetime(5 * time.Minute)
 
