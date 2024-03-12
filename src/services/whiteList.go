@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 
@@ -44,7 +45,7 @@ func (wl *WhiteListService) WhiteListRequest(req *dto.WhiteListAddDTO) error {
     ON CONFLICT (device_id, user_id) DO UPDATE
     SET ips = EXCLUDED.ips;
 	`
-	_, err := wl.db.Exec(insQ, req.UserDeviceID, req.UserId, req.UserIp)
+	_, err := wl.db.ExecContext(context.Background(), insQ, req.UserDeviceID, req.UserId, req.UserIp)
 	if err != nil {
 		// tx.Rollback()
 		fmt.Println(err)
