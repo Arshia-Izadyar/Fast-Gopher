@@ -33,63 +33,42 @@ func NewWhiteListService(cfg *config.Config) *WhiteListService {
 
 func (wl *WhiteListService) WhiteListRequest(req *dto.WhiteListAddDTO) error {
 
-	tx, err := wl.db.Begin()
-	if err != nil {
-		return &service_errors.ServiceError{EndUserMessage: "first " + err.Error(), Err: err}
-	}
-
 	insQ := `
 	INSERT INTO active_devices (device_id, user_id, ips) 
     VALUES ($1, $2, $3)
     ON CONFLICT (device_id, user_id) DO UPDATE
     SET ips = EXCLUDED.ips;
 	`
-	_, err = tx.Exec(insQ, req.UserDeviceID, req.UserId, req.UserIp)
+	_, err := wl.db.Exec(insQ, req.UserDeviceID, req.UserId, req.UserIp)
 	if err != nil {
-		tx.Rollback()
 		fmt.Println(err)
 		return &service_errors.ServiceError{EndUserMessage: "INSERT INTO active_devices " + err.Error(), Err: err}
 	}
 	go func() {
 		wl.whiteListAdd(req) // run in background
 	}()
-	tx.Commit()
 	return nil
 
 }
 
 func (wl *WhiteListService) whiteListAdd(req *dto.WhiteListAddDTO) error {
 	userId := req.UserId
-	tx, err := wl.db.Begin()
-	if err != nil {
-		return &service_errors.ServiceError{EndUserMessage: "tx : " + err.Error(), Err: err}
-	}
 
-	var count int
-	countQ := `
-	SELECT COUNT(*) FROM active_devices WHERE user_id = $1;
+	optQ := `
+	WITH ranked_devices AS (
+		SELECT id, ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY created_at ASC) AS rn
+		FROM active_devices
+		WHERE user_id = $1
+	)
+	DELETE FROM active_devices
+	WHERE id IN (
+		SELECT id FROM ranked_devices WHERE rn > 5
+	);
 	`
-	err = wl.db.QueryRow(countQ, userId).Scan(&count)
-	if err != nil {
-		tx.Rollback()
-		return &service_errors.ServiceError{EndUserMessage: "count : " + err.Error(), Err: err}
+	if _, err := wl.db.Exec(optQ, userId); err != nil {
+		return &service_errors.ServiceError{EndUserMessage: "Optimized deletion error: " + err.Error(), Err: err}
 	}
 
-	if count > 5 {
-		rmQ := `
-		DELETE FROM active_devices
-			WHERE id = (
-				SELECT id FROM active_devices
-				WHERE user_id = $1
-				ORDER BY created_at ASC
-				LIMIT 1
-			)`
-		if _, err := wl.db.Exec(rmQ, userId); err != nil {
-			tx.Rollback()
-			return &service_errors.ServiceError{EndUserMessage: "c : " + err.Error(), Err: err}
-		}
-		tx.Commit()
-	}
 	return nil
 
 }
