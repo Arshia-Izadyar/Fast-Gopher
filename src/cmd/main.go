@@ -26,13 +26,15 @@ func main() {
 	config.LoadConfig()
 	config.LoadGoogleConfig()
 	cfg := config.GetConfig()
-
 	err := cache.InitRedis(cfg)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	_, err = postgres.ConnectDB(cfg)
+	defer postgres.CloseDB()
+	defer cache.Close()
+
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -25,8 +25,6 @@ func ConnectDB(cfg *config.Config) (*sql.DB, error) {
 	if err != nil {
 		return nil, err
 	}
-	db.SetMaxOpenConns(100)
-	db.SetMaxIdleConns(100)
 
 	if err = db.Ping(); err != nil {
 		return nil, err
