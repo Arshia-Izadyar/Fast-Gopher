@@ -33,10 +33,10 @@ func NewWhiteListService(cfg *config.Config) *WhiteListService {
 
 func (wl *WhiteListService) WhiteListRequest(req *dto.WhiteListAddDTO) error {
 
-	tx, err := wl.db.Begin()
-	if err != nil {
-		return &service_errors.ServiceError{EndUserMessage: "first " + err.Error(), Err: err}
-	}
+	// tx, err := wl.db.Begin()
+	// if err != nil {
+	// 	return &service_errors.ServiceError{EndUserMessage: "first " + err.Error(), Err: err}
+	// }
 
 	insQ := `
 	INSERT INTO active_devices (device_id, user_id, ips) 
@@ -44,21 +44,21 @@ func (wl *WhiteListService) WhiteListRequest(req *dto.WhiteListAddDTO) error {
     ON CONFLICT (device_id, user_id) DO UPDATE
     SET ips = EXCLUDED.ips;
 	`
-	_, err = tx.Exec(insQ, req.UserDeviceID, req.UserId, req.UserIp)
+	_, err := wl.db.Exec(insQ, req.UserDeviceID, req.UserId, req.UserIp)
 	if err != nil {
-		tx.Rollback()
+		// tx.Rollback()
 		fmt.Println(err)
 		return &service_errors.ServiceError{EndUserMessage: "INSERT INTO active_devices " + err.Error(), Err: err}
 	}
 	go func() {
-		wl.whiteListAdd(req, tx) // run in background
+		wl.whiteListAdd(req) // run in background
 	}()
-	tx.Commit()
+	// tx.Commit()
 	return nil
 
 }
 
-func (wl *WhiteListService) whiteListAdd(req *dto.WhiteListAddDTO, tx *sql.Tx) error {
+func (wl *WhiteListService) whiteListAdd(req *dto.WhiteListAddDTO) error {
 	userId := req.UserId
 	// tx, err := wl.db.Begin()
 	// if err != nil {
@@ -69,9 +69,9 @@ func (wl *WhiteListService) whiteListAdd(req *dto.WhiteListAddDTO, tx *sql.Tx) e
 	countQ := `
 	SELECT COUNT(*) FROM active_devices WHERE user_id = $1;
 	`
-	err := tx.QueryRow(countQ, userId).Scan(&count)
+	err := wl.db.QueryRow(countQ, userId).Scan(&count)
 	if err != nil {
-		tx.Rollback()
+		// tx.Rollback()
 		return &service_errors.ServiceError{EndUserMessage: "count : " + err.Error(), Err: err}
 	}
 
@@ -84,11 +84,11 @@ func (wl *WhiteListService) whiteListAdd(req *dto.WhiteListAddDTO, tx *sql.Tx) e
 				ORDER BY created_at ASC
 				LIMIT 1
 			)`
-		if _, err := tx.Exec(rmQ, userId); err != nil {
-			tx.Rollback()
+		if _, err := wl.db.Exec(rmQ, userId); err != nil {
+			// tx.Rollback()
 			return &service_errors.ServiceError{EndUserMessage: "c : " + err.Error(), Err: err}
 		}
-		tx.Commit()
+		// tx.Commit()
 	}
 	return nil
 
