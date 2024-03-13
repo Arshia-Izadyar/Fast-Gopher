@@ -2,9 +2,9 @@ package services
 
 import (
 	"database/sql"
-	"fmt"
 
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/api/dto"
+	"github.com/Arshia-Izadyar/Fast-Gopher/src/cmd/cmd"
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/config"
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/data/postgres"
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/pkg/service_errors"
@@ -39,16 +39,21 @@ func (wl *WhiteListService) WhiteListRequest(req *dto.WhiteListAddDTO) error {
     ON CONFLICT (device_id, user_id) DO UPDATE
     SET ips = EXCLUDED.ips;
 	`
-	_, err := wl.db.Exec(insQ, req.UserDeviceID, req.UserId, req.UserIp)
-	if err != nil {
-		fmt.Println(err)
+	if _, err := wl.db.Exec(insQ, req.UserDeviceID, req.UserId, req.UserIp); err != nil {
 		return &service_errors.ServiceError{EndUserMessage: "INSERT INTO active_devices " + err.Error(), Err: err}
 	}
-	go func() {
-		wl.whiteListAdd(req) // run in background
-	}()
-	return nil
 
+	// res, err := exec.Command("command", "xxxx").Output()
+	// if err != nil {
+	// 	fmt.Println(err)
+	// }
+	// fmt.Println(string(res))
+	// workerPool.Submit("lol")
+	cmd.W.Submit(req)
+	// go func() {
+	// 	wl.whiteListAdd(req) // run in background
+	// }()
+	return nil
 }
 
 func (wl *WhiteListService) whiteListAdd(req *dto.WhiteListAddDTO) error {
@@ -70,7 +75,6 @@ func (wl *WhiteListService) whiteListAdd(req *dto.WhiteListAddDTO) error {
 	}
 
 	return nil
-
 }
 
 func (wl *WhiteListService) WhiteListRemove(req *dto.WhiteListAddDTO) error {
