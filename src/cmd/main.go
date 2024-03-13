@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/api"
+	"github.com/Arshia-Izadyar/Fast-Gopher/src/cmd/cmd"
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/config"
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/data/cache"
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/data/postgres"
@@ -38,6 +39,9 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	workerPool := cmd.InitWorker(100)
+	workerPool.Start()
+	cmd.W.StartResultLogger()
 	api.InitServer(cfg)
 
 }
