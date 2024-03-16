@@ -109,6 +109,7 @@ func (uh *UserHandler) GoogleLogin(c *fiber.Ctx) error {
 // @Tags User
 // @Accept json
 // @produces json
+// @Param   code      query     string     false  "code from google"       minlength(5)  maxlength(40)
 // @Success 200 {object} helper.Response "Create a user response"
 // @Failure 400 {object} helper.Response "Bad request"
 // @Router /google/login [get]
@@ -158,6 +159,7 @@ func (uh *UserHandler) GoogleCallback(c *fiber.Ctx) error {
 // @Tags User
 // @Accept json
 // @produces json
+// @Param   code      query     string     false  "code from google"       minlength(5)  maxlength(40)
 // @Success 200 {object} helper.Response "Create a user response"
 // @Failure 400 {object} helper.Response "Bad request"
 // @Router /auth/callback/google [get]

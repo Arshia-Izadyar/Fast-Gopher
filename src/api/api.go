@@ -35,8 +35,10 @@ func InitServer(cfg *config.Config) error {
 }
 
 func registerRouters(app *fiber.App, cfg *config.Config) {
-	router.UserRouter(app, cfg)
-	router.WhiteListAddRouter(app, cfg)
+	api := app.Group("/api")
+	v1 := api.Group("/v1")
+	router.UserRouter(v1, cfg)
+	router.WhiteListAddRouter(v1, cfg)
 }
 
 func addMiddleware(app *fiber.App) {

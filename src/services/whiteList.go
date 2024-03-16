@@ -49,11 +49,35 @@ func (wl *WhiteListService) WhiteListRequest(req *dto.WhiteListAddDTO) error {
 	// }
 	// fmt.Println(string(res))
 	// workerPool.Submit("lol")
-	cmd.W.Submit(req)
+	pool := cmd.GetPool()
+	pool.Submit(a(req))
 	// go func() {
 	// 	wl.whiteListAdd(req) // run in background
 	// }()
 	return nil
+}
+func a(req *dto.WhiteListAddDTO) func() {
+	return func() {
+		userId := req.UserId
+
+		optQ := `
+		WITH ranked_devices AS (
+			SELECT id, ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY created_at ASC) AS rn
+			FROM active_devices
+			WHERE user_id = $1
+		)
+		DELETE FROM active_devices
+		WHERE id IN (
+			SELECT id FROM ranked_devices WHERE rn > 5
+		);
+		`
+		db := postgres.GetDB()
+		if _, err := db.Exec(optQ, userId); err != nil {
+			return
+		}
+
+	}
+
 }
 
 func (wl *WhiteListService) whiteListAdd(req *dto.WhiteListAddDTO) error {

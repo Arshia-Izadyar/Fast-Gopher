@@ -19,10 +19,12 @@ import (
 // @license.name Apache 2.0
 // @license.url http://www.apache.org/licenses/LICENSE-2.0.html
 // @host localhost:4000
-// @BasePath /
+// @BasePath /api/v1
 // @securityDefinitions.apikey ApiKeyAuth
 // @in header
 // @name authorization
+var W *cmd.WorkerPool
+
 func main() {
 	config.LoadConfig()
 	config.LoadGoogleConfig()
@@ -39,9 +41,9 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	workerPool := cmd.InitWorker(100)
-	workerPool.Start()
-	cmd.W.StartResultLogger()
+	W = cmd.New(300)
+	// workerPool.Start()
+	// cmd.W.StartResultLogger()
 	api.InitServer(cfg)
 
 }

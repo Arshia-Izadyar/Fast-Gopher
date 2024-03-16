@@ -15,7 +15,7 @@
         "version": "0.1"
     },
     "host": "localhost:4000",
-    "basePath": "/",
+    "basePath": "/api/v1",
     "paths": {
         "/auth/callback/google": {
             "get": {
@@ -32,6 +32,16 @@
                     "User"
                 ],
                 "summary": "login a user with Code from google call back",
+                "parameters": [
+                    {
+                        "maxLength": 40,
+                        "minLength": 5,
+                        "type": "string",
+                        "description": "code from google",
+                        "name": "code",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Create a user response",
@@ -158,6 +168,16 @@
                     "User"
                 ],
                 "summary": "login a user",
+                "parameters": [
+                    {
+                        "maxLength": 40,
+                        "minLength": 5,
+                        "type": "string",
+                        "description": "code from google",
+                        "name": "code",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Create a user response",

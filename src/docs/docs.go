@@ -38,6 +38,16 @@ const docTemplate = `{
                     "User"
                 ],
                 "summary": "login a user with Code from google call back",
+                "parameters": [
+                    {
+                        "maxLength": 40,
+                        "minLength": 5,
+                        "type": "string",
+                        "description": "code from google",
+                        "name": "code",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Create a user response",
@@ -164,6 +174,16 @@ const docTemplate = `{
                     "User"
                 ],
                 "summary": "login a user",
+                "parameters": [
+                    {
+                        "maxLength": 40,
+                        "minLength": 5,
+                        "type": "string",
+                        "description": "code from google",
+                        "name": "code",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Create a user response",
@@ -597,7 +617,7 @@ const docTemplate = `{
 var SwaggerInfo = &swag.Spec{
 	Version:          "0.1",
 	Host:             "localhost:4000",
-	BasePath:         "/",
+	BasePath:         "/api/v1",
 	Schemes:          []string{},
 	Title:            "Internal auth",
 	Description:      "internal service for Auth",
