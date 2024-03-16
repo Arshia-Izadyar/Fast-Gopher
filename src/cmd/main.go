@@ -42,8 +42,6 @@ func main() {
 		log.Fatal(err)
 	}
 	W = cmd.New(300)
-	// workerPool.Start()
-	// cmd.W.StartResultLogger()
 	api.InitServer(cfg)
 
 }

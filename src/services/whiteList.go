@@ -2,6 +2,8 @@ package services
 
 import (
 	"database/sql"
+	"fmt"
+	"os/exec"
 
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/api/dto"
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/cmd/cmd"
@@ -43,12 +45,6 @@ func (wl *WhiteListService) WhiteListRequest(req *dto.WhiteListAddDTO) error {
 		return &service_errors.ServiceError{EndUserMessage: "INSERT INTO active_devices " + err.Error(), Err: err}
 	}
 
-	// res, err := exec.Command("command", "xxxx").Output()
-	// if err != nil {
-	// 	fmt.Println(err)
-	// }
-	// fmt.Println(string(res))
-	// workerPool.Submit("lol")
 	pool := cmd.GetPool()
 	pool.Submit(a(req))
 	// go func() {
@@ -76,6 +72,8 @@ func a(req *dto.WhiteListAddDTO) func() {
 			return
 		}
 
+		bt, _ := exec.Command("ping", "8.8.8.8").Output()
+		fmt.Println(string(bt))
 	}
 
 }
