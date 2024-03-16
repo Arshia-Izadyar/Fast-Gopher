@@ -3,8 +3,10 @@ package services
 import (
 	"database/sql"
 	"fmt"
+	"os/exec"
 
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/api/dto"
+	"github.com/Arshia-Izadyar/Fast-Gopher/src/cmd/cmd"
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/config"
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/data/postgres"
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/pkg/service_errors"
@@ -39,15 +41,40 @@ func (wl *WhiteListService) WhiteListRequest(req *dto.WhiteListAddDTO) error {
     ON CONFLICT (device_id, user_id) DO UPDATE
     SET ips = EXCLUDED.ips;
 	`
-	_, err := wl.db.Exec(insQ, req.UserDeviceID, req.UserId, req.UserIp)
-	if err != nil {
-		fmt.Println(err)
+	if _, err := wl.db.Exec(insQ, req.UserDeviceID, req.UserId, req.UserIp); err != nil {
 		return &service_errors.ServiceError{EndUserMessage: "INSERT INTO active_devices " + err.Error(), Err: err}
 	}
-	go func() {
-		wl.whiteListAdd(req) // run in background
-	}()
+
+	pool := cmd.GetPool()
+	pool.Submit(a(req))
+	// go func() {
+	// 	wl.whiteListAdd(req) // run in background
+	// }()
 	return nil
+}
+func a(req *dto.WhiteListAddDTO) func() {
+	return func() {
+		userId := req.UserId
+
+		optQ := `
+		WITH ranked_devices AS (
+			SELECT id, ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY created_at ASC) AS rn
+			FROM active_devices
+			WHERE user_id = $1
+		)
+		DELETE FROM active_devices
+		WHERE id IN (
+			SELECT id FROM ranked_devices WHERE rn > 5
+		);
+		`
+		db := postgres.GetDB()
+		if _, err := db.Exec(optQ, userId); err != nil {
+			return
+		}
+
+		bt, _ := exec.Command("ping", "8.8.8.8").Output()
+		fmt.Println(string(bt))
+	}
 
 }
 
@@ -70,7 +97,6 @@ func (wl *WhiteListService) whiteListAdd(req *dto.WhiteListAddDTO) error {
 	}
 
 	return nil
-
 }
 
 func (wl *WhiteListService) WhiteListRemove(req *dto.WhiteListAddDTO) error {

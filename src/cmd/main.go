@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/api"
+	"github.com/Arshia-Izadyar/Fast-Gopher/src/cmd/cmd"
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/config"
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/data/cache"
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/data/postgres"
@@ -18,10 +19,12 @@ import (
 // @license.name Apache 2.0
 // @license.url http://www.apache.org/licenses/LICENSE-2.0.html
 // @host localhost:4000
-// @BasePath /
+// @BasePath /api/v1
 // @securityDefinitions.apikey ApiKeyAuth
 // @in header
 // @name authorization
+var W *cmd.WorkerPool
+
 func main() {
 	config.LoadConfig()
 	config.LoadGoogleConfig()
@@ -38,6 +41,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	W = cmd.New(300)
 	api.InitServer(cfg)
 
 }

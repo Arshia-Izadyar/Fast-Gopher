@@ -7,7 +7,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func UserRouter(app *fiber.App, cfg *config.Config) {
+func UserRouter(app fiber.Router, cfg *config.Config) {
 	h := handler.NewUserHandler(cfg)
 	app.Post("/register", h.TestHandler)
 	app.Post("/login", h.LoginHandler)

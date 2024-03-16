@@ -1,4 +1,4 @@
-basePath: /
+basePath: /api/v1
 definitions:
   dto.ForgotPasswordDTO:
     properties:
@@ -94,6 +94,13 @@ paths:
       consumes:
       - application/json
       description: login a user
+      parameters:
+      - description: code from google
+        in: query
+        maxLength: 40
+        minLength: 5
+        name: code
+        type: string
       responses:
         "200":
           description: Create a user response
@@ -178,6 +185,13 @@ paths:
       consumes:
       - application/json
       description: login a user
+      parameters:
+      - description: code from google
+        in: query
+        maxLength: 40
+        minLength: 5
+        name: code
+        type: string
       responses:
         "200":
           description: Create a user response
