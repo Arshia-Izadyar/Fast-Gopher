@@ -25,7 +25,6 @@ func NewWhiteListHandler(cfg *config.Config) *WhiteListHandler {
 // @Tags Whitelist
 // @Accept json
 // @Produce json
-// @Param Device-Id header string true "Device-Id"
 // @Success 201 {object} helper.Response "Successfully whitelisted the device"
 // @Failure 500 {object} helper.Response "Internal Server Error"
 // @Router /w [get]
@@ -38,7 +37,7 @@ func (w *WhiteListHandler) Add(c *fiber.Ctx) error {
 	req := &dto.WhiteListAddDTO{
 		Key:       key,
 		SessionId: SessionId,
-		UserIp:    c.IP(),
+		UserIp:    "1.1.1.1",
 	}
 	err := w.service.WhiteListRequest(req)
 	if err != nil {
@@ -53,7 +52,6 @@ func (w *WhiteListHandler) Add(c *fiber.Ctx) error {
 // @Tags Whitelist
 // @Accept json
 // @Produce json
-// @Param DeviceIdKey header string true "Device-Id"
 // @Success 201 {object} helper.Response "Successfully whitelisted the device"
 // @Failure 500 {object} helper.Response "Internal Server Error"
 // @Router /rw [get]

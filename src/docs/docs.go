@@ -251,15 +251,6 @@ const docTemplate = `{
                     "Whitelist"
                 ],
                 "summary": "remove a device to the whitelist",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Device-Id",
-                        "name": "DeviceIdKey",
-                        "in": "header",
-                        "required": true
-                    }
-                ],
                 "responses": {
                     "201": {
                         "description": "Successfully whitelisted the device",
@@ -334,15 +325,6 @@ const docTemplate = `{
                     "Whitelist"
                 ],
                 "summary": "Add a device to the whitelist",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Device-Id",
-                        "name": "Device-Id",
-                        "in": "header",
-                        "required": true
-                    }
-                ],
                 "responses": {
                     "201": {
                         "description": "Successfully whitelisted the device",

@@ -222,12 +222,6 @@ paths:
       - application/json
       description: removes a device IP and its identifier to the user's whitelist,
         ensuring the device is not allowed to access the service.
-      parameters:
-      - description: Device-Id
-        in: header
-        name: DeviceIdKey
-        required: true
-        type: string
       produces:
       - application/json
       responses:
@@ -275,12 +269,6 @@ paths:
       - application/json
       description: Adds a device IP and its identifier to the user's whitelist, ensuring
         the device is allowed to access the service.
-      parameters:
-      - description: Device-Id
-        in: header
-        name: Device-Id
-        required: true
-        type: string
       produces:
       - application/json
       responses:
