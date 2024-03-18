@@ -1,1 +1,0 @@
-ALTER TABLE active_devices ADD COLUMN ips Varchar(255) null;
