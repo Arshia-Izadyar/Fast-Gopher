@@ -22,6 +22,9 @@ func InitServer(cfg *config.Config) error {
 			JSONDecoder: sonic.Unmarshal,
 		},
 	)
+	app.Get("swagger/Kir", func(c *fiber.Ctx) error {
+		return c.SendFile("Untitled.png")
+	})
 
 	swaggerInit(app)
 	addMiddleware(app)

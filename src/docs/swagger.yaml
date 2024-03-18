@@ -1,22 +1,44 @@
 basePath: /api/v1
 definitions:
-  dto.ForgotPasswordDTO:
+  dto.DeviceDTO:
     properties:
-      email:
+      device_name:
         type: string
-      new_password:
+      ip:
         type: string
-      new_password_confirm:
-        type: string
-      otp:
+      session_id:
         type: string
     type: object
-  dto.ForgotPasswordOtpDTO:
+  dto.GenerateKeyDTO:
     properties:
-      email:
+      device_name:
+        type: string
+      session_id:
         type: string
     required:
-    - email
+    - session_id
+    type: object
+  dto.KeyAcDTO:
+    properties:
+      access_token:
+        type: string
+      key:
+        type: string
+      refresh_token:
+        type: string
+    type: object
+  dto.KeyDTO:
+    properties:
+      device_name:
+        type: string
+      key:
+        type: string
+      session_id:
+        type: string
+    required:
+    - device_name
+    - key
+    - session_id
     type: object
   dto.RefreshTokenDTO:
     properties:
@@ -25,48 +47,15 @@ definitions:
     required:
     - refresh_token
     type: object
-  dto.ResetPasswordDTO:
+  dto.RemoveDeviceDTO:
     properties:
-      current_password:
+      device_name:
         type: string
-      new_password:
-        type: string
-      new_password_confirm:
+      session_id:
         type: string
     required:
-    - current_password
-    - new_password
-    - new_password_confirm
-    type: object
-  dto.UserCreateDTO:
-    properties:
-      email:
-        type: string
-      password:
-        type: string
-      password_confirm:
-        type: string
-    required:
-    - email
-    - password
-    - password_confirm
-    type: object
-  dto.UserDTO:
-    properties:
-      email:
-        type: string
-      password:
-        type: string
-    required:
-    - email
-    - password
-    type: object
-  dto.UserTokenDTO:
-    properties:
-      access_token:
-        type: string
-      refresh_token:
-        type: string
+    - device_name
+    - session_id
     type: object
   helper.Response:
     properties:
@@ -76,7 +65,7 @@ definitions:
       success:
         type: boolean
     type: object
-host: localhost:4000
+host: 127.0.0.1:4000
 info:
   contact:
     email: arshiaa104@gmail.com
@@ -89,184 +78,14 @@ info:
   title: Internal auth
   version: "0.1"
 paths:
-  /auth/callback/google:
-    get:
-      consumes:
-      - application/json
-      description: login a user
-      parameters:
-      - description: code from google
-        in: query
-        maxLength: 40
-        minLength: 5
-        name: code
-        type: string
-      responses:
-        "200":
-          description: Create a user response
-          schema:
-            $ref: '#/definitions/helper.Response'
-        "400":
-          description: Bad request
-          schema:
-            $ref: '#/definitions/helper.Response'
-      security:
-      - None: []
-      summary: login a user with Code from google call back
-      tags:
-      - Key
-  /forgot:
-    post:
-      description: password forget.
-      parameters:
-      - description: change users password
-        in: body
-        name: Request
-        required: true
-        schema:
-          $ref: '#/definitions/dto.ForgotPasswordDTO'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: 'message: password changed'
-          schema:
-            $ref: '#/definitions/helper.Response'
-        "400":
-          description: 'message: error message'
-          schema:
-            $ref: '#/definitions/helper.Response'
-      summary: Key password forget
-      tags:
-      - Key
-  /forgot/otp:
-    post:
-      description: send otp for password forget.
-      parameters:
-      - description: send a otp for forgot password
-        in: body
-        name: Request
-        required: true
-        schema:
-          $ref: '#/definitions/dto.ForgotPasswordOtpDTO'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 'message: password otp sent'
-          schema:
-            $ref: '#/definitions/helper.Response'
-        "400":
-          description: 'message: error message'
-          schema:
-            $ref: '#/definitions/helper.Response'
-      summary: Key password rest
-      tags:
-      - Key
-  /google:
-    get:
-      consumes:
-      - application/json
-      description: login a user with google
-      responses:
-        "200":
-          description: Create a user response
-          schema:
-            $ref: '#/definitions/helper.Response'
-        "400":
-          description: Bad request
-          schema:
-            $ref: '#/definitions/helper.Response'
-      summary: login a user with google
-      tags:
-      - Key
-  /google/login:
-    get:
-      consumes:
-      - application/json
-      description: login a user
-      parameters:
-      - description: code from google
-        in: query
-        maxLength: 40
-        minLength: 5
-        name: code
-        type: string
-      responses:
-        "200":
-          description: Create a user response
-          schema:
-            $ref: '#/definitions/helper.Response'
-        "400":
-          description: Bad request
-          schema:
-            $ref: '#/definitions/helper.Response'
-      summary: login a user
-      tags:
-      - Key
-  /login:
+  /auth/refresh:
     post:
       consumes:
       - application/json
-      description: login a user
+      description: Refresh JWT with refresh_token and generate new tokens and will
+        blacklist current refresh token.
       parameters:
-      - description: Create a user
-        in: body
-        name: Request
-        required: true
-        schema:
-          $ref: '#/definitions/dto.UserDTO'
-      responses:
-        "200":
-          description: Create a user response
-          schema:
-            $ref: '#/definitions/helper.Response'
-        "400":
-          description: Bad request
-          schema:
-            $ref: '#/definitions/helper.Response'
-      summary: login a user
-      tags:
-      - Key
-  /logout:
-    get:
-      consumes:
-      - application/json
-      description: Logs out a user by invalidating the user's session.
-      parameters:
-      - description: Authentication Token
-        in: header
-        name: AuthenticationKey
-        required: true
-        type: string
-      - description: Device-Id
-        in: header
-        name: DeviceIdKey
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "204":
-          description: 'message: user logged out'
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: 'message: error message'
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Key logout
-      tags:
-      - Key
-  /refresh:
-    post:
-      description: generate a new token from refresh.
-      parameters:
-      - description: Create a new token
+      - description: Create a new atoken and rtoken
         in: body
         name: Request
         required: true
@@ -275,63 +94,126 @@ paths:
       produces:
       - application/json
       responses:
-        "201":
-          description: 'message: new rToken and aToken'
-          schema:
-            $ref: '#/definitions/dto.UserTokenDTO'
-        "400":
-          description: 'message: error message'
-          schema:
-            $ref: '#/definitions/helper.Response'
-      summary: Key Refresh
-      tags:
-      - Key
-  /register:
-    post:
-      consumes:
-      - application/json
-      description: create a new user
-      parameters:
-      - description: Create a user
-        in: body
-        name: Request
-        required: true
-        schema:
-          $ref: '#/definitions/dto.UserCreateDTO'
-      responses:
         "200":
-          description: Create a user response
+          description: 'message: helper.Response'
           schema:
-            $ref: '#/definitions/helper.Response'
+            $ref: '#/definitions/dto.KeyAcDTO'
         "400":
-          description: Bad request
+          description: 'message: helper.Response'
           schema:
             $ref: '#/definitions/helper.Response'
-      summary: Create a user
+      security:
+      - ApiKeyAuth: []
+      summary: Refresh JWT with refresh_token
       tags:
-      - Key
-  /reset:
-    put:
-      description: Reset Key password.
+      - Authentication
+  /key:
+    post:
+      description: generate a new Key when new users install the APP.
       parameters:
-      - description: request for password change
+      - description: Create a new token
         in: body
         name: Request
         required: true
         schema:
-          $ref: '#/definitions/dto.ResetPasswordDTO'
+          $ref: '#/definitions/dto.GenerateKeyDTO'
       produces:
       - application/json
       responses:
-        "202":
-          description: 'message: password Changed'
+        "201":
+          description: 'message: new rToken and aToken + key'
+          schema:
+            $ref: '#/definitions/dto.KeyAcDTO'
+        "400":
+          description: 'message: error message'
+          schema:
+            $ref: '#/definitions/helper.Response'
+      summary: Generate a new key
+      tags:
+      - Key
+  /key/tk:
+    post:
+      description: generate a Key when.
+      parameters:
+      - description: Create a new token
+        in: body
+        name: Request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.KeyDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: 'message: new rToken and aToken'
+          schema:
+            $ref: '#/definitions/dto.KeyAcDTO'
+        "400":
+          description: 'message: error message'
+          schema:
+            $ref: '#/definitions/helper.Response'
+        "500":
+          description: 'message: fuck'
+          schema:
+            $ref: '#/definitions/helper.Response'
+      summary: Generate a new Token based on already existing key
+      tags:
+      - Key
+  /rm:
+    delete:
+      description: remove a single device from list\nafter removing a device from
+        list you get a 403 error on whitelist end point after that get a new key from
+        /key.
+      parameters:
+      - description: info for device
+        in: body
+        name: Request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.RemoveDeviceDTO'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: 'message: removed'
           schema:
             $ref: '#/definitions/helper.Response'
         "400":
           description: 'message: error message'
           schema:
             $ref: '#/definitions/helper.Response'
-      summary: Key Refresh
+        "500":
+          description: 'message: fuck'
+          schema:
+            $ref: '#/definitions/helper.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Remove a device
+      tags:
+      - Key
+  /rm/all:
+    delete:
+      description: remove all devices from list except the current device\nafter removing
+        a device from list you get a 403 error on whitelist end point after that get
+        a new key from /key.
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: 'message: removed'
+          schema:
+            $ref: '#/definitions/helper.Response'
+        "400":
+          description: 'message: error message'
+          schema:
+            $ref: '#/definitions/helper.Response'
+        "500":
+          description: 'message: fuck'
+          schema:
+            $ref: '#/definitions/helper.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Remove all devices
       tags:
       - Key
   /rw:
@@ -358,10 +240,35 @@ paths:
           schema:
             $ref: '#/definitions/helper.Response'
       security:
-      - AuthBearer: []
+      - ApiKeyAuth: []
       summary: remove a device to the whitelist
       tags:
       - Whitelist
+  /show:
+    get:
+      description: show all of active devices.
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: 'message: list of devices'
+          schema:
+            items:
+              $ref: '#/definitions/dto.DeviceDTO'
+            type: array
+        "400":
+          description: 'message: error message'
+          schema:
+            $ref: '#/definitions/helper.Response'
+        "500":
+          description: 'message: fuck'
+          schema:
+            $ref: '#/definitions/helper.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: show all of currently active sessions
+      tags:
+      - Key
   /w:
     get:
       consumes:
@@ -386,7 +293,7 @@ paths:
           schema:
             $ref: '#/definitions/helper.Response'
       security:
-      - AuthBearer: []
+      - ApiKeyAuth: []
       summary: Add a device to the whitelist
       tags:
       - Whitelist

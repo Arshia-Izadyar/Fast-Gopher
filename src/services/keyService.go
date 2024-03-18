@@ -48,15 +48,15 @@ func (u *KeyService) GenerateKey(req *dto.GenerateKeyDTO) (*dto.KeyAcDTO, *servi
 	_, err = tx.Exec(saveKey, key)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok && pqErr.Code == "23505" {
-			return nil, &service_errors.ServiceErrors{EndUserMessage: "the key already exists try getting another key", Status: fiber.StatusInternalServerError}
+			return nil, &service_errors.ServiceErrors{EndUserMessage: "the key already exists try getting another key", Status: fiber.StatusForbidden}
 		}
 		return nil, &service_errors.ServiceErrors{EndUserMessage: "insert query failed", Status: fiber.StatusInternalServerError}
 	}
 
 	saveSession := `
-		INSERT INTO active_devices(session_id, ac_keys_id) VALUES($1, $2);
+		INSERT INTO active_devices(session_id, ac_keys_id, device_name) VALUES($1, $2, $3);
 	`
-	_, err = tx.Exec(saveSession, req.SessionId, key)
+	_, err = tx.Exec(saveSession, req.SessionId, key, req.DeviceName)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok && pqErr.Code == "23505" {
 			return nil, &service_errors.ServiceErrors{EndUserMessage: fmt.Sprintf("session id (%s) already exists", req.SessionId), Status: fiber.StatusBadRequest}
@@ -67,7 +67,7 @@ func (u *KeyService) GenerateKey(req *dto.GenerateKeyDTO) (*dto.KeyAcDTO, *servi
 		return nil, &service_errors.ServiceErrors{EndUserMessage: "failed to commit transaction", Status: fiber.StatusInternalServerError}
 	}
 
-	result, err := common.GenerateJwt(&dto.KeyDTO{Key: key, Premium: false, SessionId: req.SessionId}, u.cfg)
+	result, err := common.GenerateJwt(&dto.KeyDTO{Key: key, SessionId: req.SessionId}, u.cfg)
 	// TODO: err handling
 	if err != nil {
 		return nil, &service_errors.ServiceErrors{EndUserMessage: "failed to Generate jwt", Status: fiber.StatusInternalServerError}
@@ -83,19 +83,9 @@ func (u *KeyService) GenerateTokenFromKey(req *dto.KeyDTO) (*dto.KeyAcDTO, *serv
 	}
 	defer tx.Rollback()
 
-	// Select premium
-	q := `SELECT premium FROM ac_keys WHERE id = $1`
-	err = tx.QueryRow(q, req.Key).Scan(&req.Premium)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, &service_errors.ServiceErrors{EndUserMessage: "no active key found", Status: fiber.StatusNotFound}
-		}
-		return nil, &service_errors.ServiceErrors{EndUserMessage: "failed to fetch key", Status: fiber.StatusInternalServerError}
-	}
-
 	// Save session
-	saveSession := `INSERT INTO active_devices(session_id, ac_keys_id) VALUES($1, $2) ON CONFLICT (session_id, ac_keys_id) DO NOTHING;`
-	_, err = tx.Exec(saveSession, req.SessionId, req.Key)
+	saveSession := `INSERT INTO active_devices(session_id, ac_keys_id, device_name) VALUES($1, $2, $3) ON CONFLICT (session_id, ac_keys_id) DO NOTHING;`
+	_, err = tx.Exec(saveSession, req.SessionId, req.Key, req.DeviceName)
 	if err != nil {
 		return nil, &service_errors.ServiceErrors{EndUserMessage: "failed to save session", Status: fiber.StatusInternalServerError}
 	}
@@ -137,15 +127,9 @@ func (u *KeyService) Refresh(req *dto.RefreshTokenDTO) (*dto.KeyAcDTO, *service_
 	key, _ := claims[constants.Key].(string)
 	session, _ := claims[constants.SessionIdKey].(string)
 
-	p, err := u.fetchPremiumStatus(key)
-	if err != nil {
-		return nil, err
-	}
-
 	res, e := common.GenerateJwt(&dto.KeyDTO{
 		Key:       key,
 		SessionId: session,
-		Premium:   p,
 	}, u.cfg)
 
 	if e != nil {
@@ -154,15 +138,60 @@ func (u *KeyService) Refresh(req *dto.RefreshTokenDTO) (*dto.KeyAcDTO, *service_
 	return res, nil
 }
 
-func (k *KeyService) fetchPremiumStatus(key string) (bool, *service_errors.ServiceErrors) {
-	var premium bool
-	q := `SELECT premium FROM ac_keys WHERE id = $1`
-	err := k.db.QueryRow(q, key).Scan(&premium)
+func (k *KeyService) ShowAllActiveDevices(req *dto.IKeyDTO) ([]dto.DeviceDTO, *service_errors.ServiceErrors) {
+	q := `
+		SELECT device_name, session_id, ip FROM active_devices WHERE ac_keys_id = $1
+	`
+	r, err := k.db.Query(q, req.Key)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return false, &service_errors.ServiceErrors{EndUserMessage: "no active key found", Status: fiber.StatusNotFound}
-		}
-		return false, &service_errors.ServiceErrors{EndUserMessage: "failed to fetch key", Status: fiber.StatusInternalServerError}
+		return nil, nil
 	}
-	return premium, nil
+	var res []dto.DeviceDTO
+	for r.Next() {
+
+		var device dto.DeviceDTO
+		r.Scan(&device.DeviceName, &device.SessionId, &device.Ip)
+		res = append(res, device)
+	}
+
+	return res, nil
+}
+
+func (k *KeyService) DeleteSession(req *dto.RemoveDeviceDTO) *service_errors.ServiceErrors {
+	q := `
+		DELETE FROM active_devices WHERE session_id = $1 AND device_name = $2;
+	`
+	r, err := k.db.Exec(q, req.SessionId, req.DeviceName)
+	if count, _ := r.RowsAffected(); count == 0 {
+		return &service_errors.ServiceErrors{EndUserMessage: "device not found", Status: fiber.StatusNotFound}
+	}
+
+	if err != nil {
+		log.Fatal(err)
+		return &service_errors.ServiceErrors{EndUserMessage: "can't delete device something went wrong", Status: fiber.StatusInternalServerError}
+	}
+	return nil
+}
+
+func (k *KeyService) DeleteAllSessions(req *dto.SessionKeyDTO) *service_errors.ServiceErrors {
+	tx, err := k.db.Begin()
+	defer tx.Rollback()
+	if err != nil {
+		return &service_errors.ServiceErrors{EndUserMessage: "failed to start db transaction", Status: fiber.StatusInternalServerError}
+	}
+
+	q := `
+		DELETE FROM active_devices WHERE ac_keys_id = $1 AND session_id != $2;
+	`
+	r, err := tx.Exec(q, req.Key, req.SessionId)
+	if count, _ := r.RowsAffected(); count == 0 {
+		return &service_errors.ServiceErrors{EndUserMessage: "device not found", Status: fiber.StatusNotFound}
+	}
+
+	if err != nil {
+		log.Fatal(err)
+		return &service_errors.ServiceErrors{EndUserMessage: "can't delete devices something went wrong", Status: fiber.StatusInternalServerError}
+	}
+	tx.Commit()
+	return nil
 }

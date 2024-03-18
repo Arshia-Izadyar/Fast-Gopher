@@ -3,6 +3,7 @@ package services
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"os/exec"
 
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/api/dto"
@@ -10,6 +11,7 @@ import (
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/config"
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/data/postgres"
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/pkg/service_errors"
+	"github.com/gofiber/fiber/v2"
 )
 
 /*
@@ -33,16 +35,31 @@ func NewWhiteListService(cfg *config.Config) *WhiteListService {
 	}
 }
 
-func (wl *WhiteListService) WhiteListRequest(req *dto.WhiteListAddDTO) error {
+func (wl *WhiteListService) WhiteListRequest(req *dto.WhiteListAddDTO) *service_errors.ServiceErrors {
+
+	// insQ := `
+	// INSERT INTO active_devices (session_id, ac_keys_id, ip)
+	// VALUES ($1, $2, $3)
+	// ON CONFLICT (session_id, ac_keys_id) DO UPDATE
+	// SET ip = EXCLUDED.ip;
+	// `
 
 	insQ := `
-	INSERT INTO active_devices (session_id, ac_keys_id, ip) 
-    VALUES ($1, $2, $3)
-    ON CONFLICT (session_id, ac_keys_id) DO UPDATE
-    SET ip = EXCLUDED.ip;
+		UPDATE active_devices
+		SET ip = $1
+		WHERE session_id = $2 AND ac_keys_id = $3;
 	`
-	if _, err := wl.db.Exec(insQ, req.SessionId, req.Key, req.UserIp); err != nil {
+	r, err := wl.db.Exec(insQ, req.UserIp, req.SessionId, req.Key)
+	if err != nil {
 		return &service_errors.ServiceErrors{EndUserMessage: "INSERT INTO active_devices " + err.Error(), Err: err}
+	}
+
+	count, err := r.RowsAffected()
+	if err != nil {
+		log.Fatal(err)
+	}
+	if count == 0 {
+		return &service_errors.ServiceErrors{EndUserMessage: "device is not in users active devices please request a session on key", Status: fiber.StatusForbidden}
 	}
 
 	pool := cmd.GetPool()
@@ -97,25 +114,26 @@ func a(req *dto.WhiteListAddDTO) func() {
 // 	return nil
 // }
 
-// func (wl *WhiteListService) WhiteListRemove(req *dto.WhiteListAddDTO) error {
-// 	// find user
-// 	// del device
-// 	// bye
+func (wl *WhiteListService) WhiteListRemove(req *dto.WhiteListAddDTO) *service_errors.ServiceErrors {
+	// find user
+	// del device
+	// bye
 
-// 	tx, err := wl.db.Begin()
-// 	if err != nil {
-// 		return &service_errors.ServiceErrors{EndUserMessage: service_errors.InternalError}
-// 	}
+	tx, err := wl.db.Begin()
+	if err != nil {
+		return &service_errors.ServiceErrors{EndUserMessage: service_errors.InternalError}
+	}
 
-// 	q := `
-// 	DELETE FROM active_devices where user_id = $1 AND device_id = $2;
-// 	`
+	q := `
+	DELETE FROM active_devices where ac_keys_id = $1 AND session_id = $2;
+	`
 
-// 	if _, err = tx.Exec(q, req.UserId, req.UserDeviceID); err != nil {
-// 		tx.Rollback()
-// 		return &service_errors.ServiceErrors{EndUserMessage: "deletion failed"}
-// 	}
+	if _, err = tx.Exec(q, req.Key, req.SessionId); err != nil {
+		tx.Rollback()
+		fmt.Println(err)
+		return &service_errors.ServiceErrors{EndUserMessage: "deletion failed", Status: fiber.StatusInternalServerError}
+	}
 
-// 	tx.Commit()
-// 	return nil
-// }
+	tx.Commit()
+	return nil
+}

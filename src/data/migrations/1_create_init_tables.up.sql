@@ -8,6 +8,7 @@ CREATE TABLE ac_keys (
 
 CREATE TABLE active_devices (
     id SERIAL PRIMARY KEY,
+    device_name VARCHAR(255) NULL,
     session_id VARCHAR(255) NOT NULL, -- Use VARCHAR instead of string
     ip VARCHAR(255) NULL,
     ac_keys_id VARCHAR(255) NOT NULL, -- Define the ac_keys_id column explicitly

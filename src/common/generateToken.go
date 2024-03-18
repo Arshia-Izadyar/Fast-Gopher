@@ -29,7 +29,6 @@ func GenerateJwt(key *dto.KeyDTO, cfg *config.Config) (*dto.KeyAcDTO, error) {
 	atClaims := jwt.MapClaims{
 		constants.ExpKey:       expirationTimeAccessToken,
 		constants.Key:          key.Key,
-		constants.Premium:      key.Premium,
 		constants.SessionIdKey: key.SessionId,
 		constants.AccessType:   true,
 	}

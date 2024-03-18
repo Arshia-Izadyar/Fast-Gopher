@@ -28,11 +28,10 @@ func New(cfg *config.Config) fiber.Handler {
 		}
 		tk, e := common.ValidateToken(slicedToken[1], cfg)
 		if e != nil {
-			return c.Status(fiber.StatusUnauthorized).JSON(helper.GenerateResponseWithError(err, false))
+			return c.Status(fiber.StatusUnauthorized).JSON(helper.GenerateResponseWithError(e, false))
 		}
 		c.Locals(constants.Key, tk[constants.Key].(string))
 		c.Locals(constants.SessionIdKey, tk[constants.SessionIdKey].(string))
-		c.Locals(constants.Premium, tk[constants.Premium].(bool))
 		return c.Next()
 	}
 }
