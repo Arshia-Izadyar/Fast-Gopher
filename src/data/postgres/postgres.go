@@ -12,6 +12,8 @@ var psqlDb *sql.DB
 
 func ConnectDB(cfg *config.Config) (*sql.DB, error) {
 	var err error
+	fmt.Println(cfg.Postgres.DbName)
+	fmt.Println(cfg.Postgres.User)
 	cnn := fmt.Sprintf(
 		"postgres://%s:%s@%s:%d/%s?sslmode=disable",
 		cfg.Postgres.User,

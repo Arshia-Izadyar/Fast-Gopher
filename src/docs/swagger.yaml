@@ -114,7 +114,7 @@ paths:
       - None: []
       summary: login a user with Code from google call back
       tags:
-      - User
+      - Key
   /forgot:
     post:
       description: password forget.
@@ -136,9 +136,9 @@ paths:
           description: 'message: error message'
           schema:
             $ref: '#/definitions/helper.Response'
-      summary: User password forget
+      summary: Key password forget
       tags:
-      - User
+      - Key
   /forgot/otp:
     post:
       description: send otp for password forget.
@@ -160,9 +160,9 @@ paths:
           description: 'message: error message'
           schema:
             $ref: '#/definitions/helper.Response'
-      summary: User password rest
+      summary: Key password rest
       tags:
-      - User
+      - Key
   /google:
     get:
       consumes:
@@ -179,7 +179,7 @@ paths:
             $ref: '#/definitions/helper.Response'
       summary: login a user with google
       tags:
-      - User
+      - Key
   /google/login:
     get:
       consumes:
@@ -203,7 +203,7 @@ paths:
             $ref: '#/definitions/helper.Response'
       summary: login a user
       tags:
-      - User
+      - Key
   /login:
     post:
       consumes:
@@ -227,7 +227,7 @@ paths:
             $ref: '#/definitions/helper.Response'
       summary: login a user
       tags:
-      - User
+      - Key
   /logout:
     get:
       consumes:
@@ -259,9 +259,9 @@ paths:
             type: object
       security:
       - ApiKeyAuth: []
-      summary: User logout
+      summary: Key logout
       tags:
-      - User
+      - Key
   /refresh:
     post:
       description: generate a new token from refresh.
@@ -283,9 +283,9 @@ paths:
           description: 'message: error message'
           schema:
             $ref: '#/definitions/helper.Response'
-      summary: User Refresh
+      summary: Key Refresh
       tags:
-      - User
+      - Key
   /register:
     post:
       consumes:
@@ -309,10 +309,10 @@ paths:
             $ref: '#/definitions/helper.Response'
       summary: Create a user
       tags:
-      - User
+      - Key
   /reset:
     put:
-      description: Reset User password.
+      description: Reset Key password.
       parameters:
       - description: request for password change
         in: body
@@ -331,9 +331,9 @@ paths:
           description: 'message: error message'
           schema:
             $ref: '#/definitions/helper.Response'
-      summary: User Refresh
+      summary: Key Refresh
       tags:
-      - User
+      - Key
   /rw:
     get:
       consumes:

@@ -42,7 +42,7 @@ func (wl *WhiteListService) WhiteListRequest(req *dto.WhiteListAddDTO) error {
     SET ips = EXCLUDED.ips;
 	`
 	if _, err := wl.db.Exec(insQ, req.UserDeviceID, req.UserId, req.UserIp); err != nil {
-		return &service_errors.ServiceError{EndUserMessage: "INSERT INTO active_devices " + err.Error(), Err: err}
+		return &service_errors.ServiceErrors{EndUserMessage: "INSERT INTO active_devices " + err.Error(), Err: err}
 	}
 
 	pool := cmd.GetPool()
@@ -93,9 +93,8 @@ func (wl *WhiteListService) whiteListAdd(req *dto.WhiteListAddDTO) error {
 	);
 	`
 	if _, err := wl.db.Exec(optQ, userId); err != nil {
-		return &service_errors.ServiceError{EndUserMessage: "Optimized deletion error: " + err.Error(), Err: err}
+		return &service_errors.ServiceErrors{EndUserMessage: "Optimized deletion error: " + err.Error(), Err: err}
 	}
-
 	return nil
 }
 
@@ -106,7 +105,7 @@ func (wl *WhiteListService) WhiteListRemove(req *dto.WhiteListAddDTO) error {
 
 	tx, err := wl.db.Begin()
 	if err != nil {
-		return &service_errors.ServiceError{EndUserMessage: service_errors.InternalError}
+		return &service_errors.ServiceErrors{EndUserMessage: service_errors.InternalError}
 	}
 
 	q := `
@@ -115,7 +114,7 @@ func (wl *WhiteListService) WhiteListRemove(req *dto.WhiteListAddDTO) error {
 
 	if _, err = tx.Exec(q, req.UserId, req.UserDeviceID); err != nil {
 		tx.Rollback()
-		return &service_errors.ServiceError{EndUserMessage: "deletion failed"}
+		return &service_errors.ServiceErrors{EndUserMessage: "deletion failed"}
 	}
 
 	tx.Commit()

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/api"
@@ -39,6 +40,7 @@ func main() {
 	defer cache.Close()
 
 	if err != nil {
+		fmt.Println(err)
 		log.Fatal(err)
 	}
 	W = cmd.New(300)

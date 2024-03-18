@@ -29,7 +29,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "User"
+                    "Key"
                 ],
                 "summary": "login a user with Code from google call back",
                 "parameters": [
@@ -65,9 +65,9 @@
                     "application/json"
                 ],
                 "tags": [
-                    "User"
+                    "Key"
                 ],
-                "summary": "User password forget",
+                "summary": "Key password forget",
                 "parameters": [
                     {
                         "description": "change users password",
@@ -102,9 +102,9 @@
                     "application/json"
                 ],
                 "tags": [
-                    "User"
+                    "Key"
                 ],
-                "summary": "User password rest",
+                "summary": "Key password rest",
                 "parameters": [
                     {
                         "description": "send a otp for forgot password",
@@ -139,7 +139,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "User"
+                    "Key"
                 ],
                 "summary": "login a user with google",
                 "responses": {
@@ -165,7 +165,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "User"
+                    "Key"
                 ],
                 "summary": "login a user",
                 "parameters": [
@@ -201,7 +201,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "User"
+                    "Key"
                 ],
                 "summary": "login a user",
                 "parameters": [
@@ -246,9 +246,9 @@
                     "application/json"
                 ],
                 "tags": [
-                    "User"
+                    "Key"
                 ],
-                "summary": "User logout",
+                "summary": "Key logout",
                 "parameters": [
                     {
                         "type": "string",
@@ -290,9 +290,9 @@
                     "application/json"
                 ],
                 "tags": [
-                    "User"
+                    "Key"
                 ],
-                "summary": "User Refresh",
+                "summary": "Key Refresh",
                 "parameters": [
                     {
                         "description": "Create a new token",
@@ -327,7 +327,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "User"
+                    "Key"
                 ],
                 "summary": "Create a user",
                 "parameters": [
@@ -359,14 +359,14 @@
         },
         "/reset": {
             "put": {
-                "description": "Reset User password.",
+                "description": "Reset Key password.",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "User"
+                    "Key"
                 ],
-                "summary": "User Refresh",
+                "summary": "Key Refresh",
                 "parameters": [
                     {
                         "description": "request for password change",

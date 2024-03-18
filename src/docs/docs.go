@@ -35,7 +35,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "User"
+                    "Key"
                 ],
                 "summary": "login a user with Code from google call back",
                 "parameters": [
@@ -71,9 +71,9 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "User"
+                    "Key"
                 ],
-                "summary": "User password forget",
+                "summary": "Key password forget",
                 "parameters": [
                     {
                         "description": "change users password",
@@ -108,9 +108,9 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "User"
+                    "Key"
                 ],
-                "summary": "User password rest",
+                "summary": "Key password rest",
                 "parameters": [
                     {
                         "description": "send a otp for forgot password",
@@ -145,7 +145,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "User"
+                    "Key"
                 ],
                 "summary": "login a user with google",
                 "responses": {
@@ -171,7 +171,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "User"
+                    "Key"
                 ],
                 "summary": "login a user",
                 "parameters": [
@@ -207,7 +207,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "User"
+                    "Key"
                 ],
                 "summary": "login a user",
                 "parameters": [
@@ -252,9 +252,9 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "User"
+                    "Key"
                 ],
-                "summary": "User logout",
+                "summary": "Key logout",
                 "parameters": [
                     {
                         "type": "string",
@@ -296,9 +296,9 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "User"
+                    "Key"
                 ],
-                "summary": "User Refresh",
+                "summary": "Key Refresh",
                 "parameters": [
                     {
                         "description": "Create a new token",
@@ -333,7 +333,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "User"
+                    "Key"
                 ],
                 "summary": "Create a user",
                 "parameters": [
@@ -365,14 +365,14 @@ const docTemplate = `{
         },
         "/reset": {
             "put": {
-                "description": "Reset User password.",
+                "description": "Reset Key password.",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "User"
+                    "Key"
                 ],
-                "summary": "User Refresh",
+                "summary": "Key Refresh",
                 "parameters": [
                     {
                         "description": "request for password change",

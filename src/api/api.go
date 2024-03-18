@@ -44,7 +44,7 @@ func registerRouters(app *fiber.App, cfg *config.Config) {
 func addMiddleware(app *fiber.App) {
 	app.Use(cors.New(cors.Config{
 		AllowOrigins: "*",
-		AllowMethods: "GET,POST,HEAD,PUT,DELETE,PATCH",
+		AllowMethods: "GET,POST,HEAD,PUT,DELETE,PATCH,OPTIONS",
 		AllowHeaders: "Origin, Content-Type, Accept",
 	}))
 
@@ -52,7 +52,7 @@ func addMiddleware(app *fiber.App) {
 	// 	Max:        20,
 	// 	Expiration: 60 * time.Second,
 	// 	LimitReached: func(c *fiber.Ctx) error {
-	// 		return c.Status(fiber.StatusTooManyRequests).JSON(helper.GenerateResponseWithError(&service_errors.ServiceError{EndUserMessage: "too many requests"}, false))
+	// 		return c.Status(fiber.StatusTooManyRequests).JSON(helper.GenerateResponseWithError(&service_errors.ServiceErrors{EndUserMessage: "too many requests"}, false))
 	// 	},
 	// 	SkipFailedRequests:     false,
 	// 	SkipSuccessfulRequests: false,

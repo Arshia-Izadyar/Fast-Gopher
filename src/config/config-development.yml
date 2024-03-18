@@ -13,7 +13,7 @@ postgres:
   port: 5432
   user: arshia
   password: a123
-  dbName: go1
+  dbName: go2
   sslMode: disable
   maxIdleConns: 15
   maxOpenConns: 100
@@ -29,14 +29,8 @@ redis:
   poolSize: 10
   poolTimeout: 15
   idleCheckFrequency: 500
-password:
-  includeChars: true
-  includeDigits: true
-  minLength: 6
-  maxLength: 64
-  includeUppercase: true
-  includeLowercase: true
-  punc: true
+key:
+  len: 20
 otp:
   digits: 6
   expireTime: 120

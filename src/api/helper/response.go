@@ -3,9 +3,9 @@ package helper
 import "github.com/Arshia-Izadyar/Fast-Gopher/src/api/validator"
 
 type Response struct {
-	Success bool
-	Data    interface{}
-	Error   string
+	Success bool        `json:"success"`
+	Data    interface{} `json:"data"`
+	Error   string      `json:"error"`
 }
 
 func GenerateResponse(data interface{}, success bool) *Response {
