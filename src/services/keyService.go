@@ -18,18 +18,15 @@ import (
 )
 
 type KeyService struct {
-	db               *sql.DB
-	cfg              *config.Config
-	whiteListService *WhiteListService
+	db  *sql.DB
+	cfg *config.Config
 }
 
 func NewKeyService(cfg *config.Config) *KeyService {
 	db := postgres.GetDB()
-	wl := NewWhiteListService(cfg)
 	return &KeyService{
-		db:               db,
-		cfg:              cfg,
-		whiteListService: wl,
+		db:  db,
+		cfg: cfg,
 	}
 }
 
@@ -118,12 +115,6 @@ func (u *KeyService) GenerateTokenFromKey(req *dto.KeyDTO) (*dto.KeyAcDTO, *serv
 
 // refresh
 func (u *KeyService) Refresh(req *dto.RefreshTokenDTO) (*dto.KeyAcDTO, *service_errors.ServiceErrors) {
-
-	// 	// 1. check if refresh is used
-	// 	// 2. check if its is a refresh
-	// 	// 3. blacklist refresh
-	// 	// 4. issue new jwt
-
 	claims, err := common.ValidateToken(req.RefreshToken, u.cfg)
 	if err != nil {
 		return nil, err
@@ -137,9 +128,7 @@ func (u *KeyService) Refresh(req *dto.RefreshTokenDTO) (*dto.KeyAcDTO, *service_
 		return nil, &service_errors.ServiceErrors{EndUserMessage: service_errors.TokenInvalid, Status: fiber.StatusBadRequest}
 	}
 
-	remainingTime := time.Unix(int64((claims[constants.ExpKey]).(float64)), 0)
-
-	redisErr = cache.Set[bool](req.RefreshToken, true, time.Until(remainingTime)*time.Minute)
+	redisErr = cache.Set[bool](req.RefreshToken, true, time.Until(time.Unix(int64((claims[constants.ExpKey]).(float64)), 0))*time.Minute)
 	if redisErr != nil {
 		log.Fatal(redisErr)
 		return nil, &service_errors.ServiceErrors{EndUserMessage: "can't black list old refresh token", Status: fiber.StatusInternalServerError}

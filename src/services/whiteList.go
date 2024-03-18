@@ -36,12 +36,12 @@ func NewWhiteListService(cfg *config.Config) *WhiteListService {
 func (wl *WhiteListService) WhiteListRequest(req *dto.WhiteListAddDTO) error {
 
 	insQ := `
-	INSERT INTO active_devices (device_id, user_id, ips) 
+	INSERT INTO active_devices (session_id, ac_keys_id, ip) 
     VALUES ($1, $2, $3)
-    ON CONFLICT (device_id, user_id) DO UPDATE
-    SET ips = EXCLUDED.ips;
+    ON CONFLICT (session_id, ac_keys_id) DO UPDATE
+    SET ip = EXCLUDED.ip;
 	`
-	if _, err := wl.db.Exec(insQ, req.UserDeviceID, req.UserId, req.UserIp); err != nil {
+	if _, err := wl.db.Exec(insQ, req.SessionId, req.Key, req.UserIp); err != nil {
 		return &service_errors.ServiceErrors{EndUserMessage: "INSERT INTO active_devices " + err.Error(), Err: err}
 	}
 
@@ -54,13 +54,12 @@ func (wl *WhiteListService) WhiteListRequest(req *dto.WhiteListAddDTO) error {
 }
 func a(req *dto.WhiteListAddDTO) func() {
 	return func() {
-		userId := req.UserId
 
 		optQ := `
 		WITH ranked_devices AS (
-			SELECT id, ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY created_at ASC) AS rn
+			SELECT id, ROW_NUMBER() OVER (PARTITION BY ac_keys_id ORDER BY created_at DESC) AS rn
 			FROM active_devices
-			WHERE user_id = $1
+			WHERE ac_keys_id = $1
 		)
 		DELETE FROM active_devices
 		WHERE id IN (
@@ -68,7 +67,7 @@ func a(req *dto.WhiteListAddDTO) func() {
 		);
 		`
 		db := postgres.GetDB()
-		if _, err := db.Exec(optQ, userId); err != nil {
+		if _, err := db.Exec(optQ, req.Key); err != nil {
 			return
 		}
 
@@ -78,45 +77,45 @@ func a(req *dto.WhiteListAddDTO) func() {
 
 }
 
-func (wl *WhiteListService) whiteListAdd(req *dto.WhiteListAddDTO) error {
-	userId := req.UserId
+// func (wl *WhiteListService) whiteListAdd(req *dto.WhiteListAddDTO) error {
+// 	userId := req.UserId
 
-	optQ := `
-	WITH ranked_devices AS (
-		SELECT id, ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY created_at ASC) AS rn
-		FROM active_devices
-		WHERE user_id = $1
-	)
-	DELETE FROM active_devices
-	WHERE id IN (
-		SELECT id FROM ranked_devices WHERE rn > 5
-	);
-	`
-	if _, err := wl.db.Exec(optQ, userId); err != nil {
-		return &service_errors.ServiceErrors{EndUserMessage: "Optimized deletion error: " + err.Error(), Err: err}
-	}
-	return nil
-}
+// 	optQ := `
+// 	WITH ranked_devices AS (
+// 		SELECT id, ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY created_at ASC) AS rn
+// 		FROM active_devices
+// 		WHERE user_id = $1
+// 	)
+// 	DELETE FROM active_devices
+// 	WHERE id IN (
+// 		SELECT id FROM ranked_devices WHERE rn > 5
+// 	);
+// 	`
+// 	if _, err := wl.db.Exec(optQ, userId); err != nil {
+// 		return &service_errors.ServiceErrors{EndUserMessage: "Optimized deletion error: " + err.Error(), Err: err}
+// 	}
+// 	return nil
+// }
 
-func (wl *WhiteListService) WhiteListRemove(req *dto.WhiteListAddDTO) error {
-	// find user
-	// del device
-	// bye
+// func (wl *WhiteListService) WhiteListRemove(req *dto.WhiteListAddDTO) error {
+// 	// find user
+// 	// del device
+// 	// bye
 
-	tx, err := wl.db.Begin()
-	if err != nil {
-		return &service_errors.ServiceErrors{EndUserMessage: service_errors.InternalError}
-	}
+// 	tx, err := wl.db.Begin()
+// 	if err != nil {
+// 		return &service_errors.ServiceErrors{EndUserMessage: service_errors.InternalError}
+// 	}
 
-	q := `
-	DELETE FROM active_devices where user_id = $1 AND device_id = $2;
-	`
+// 	q := `
+// 	DELETE FROM active_devices where user_id = $1 AND device_id = $2;
+// 	`
 
-	if _, err = tx.Exec(q, req.UserId, req.UserDeviceID); err != nil {
-		tx.Rollback()
-		return &service_errors.ServiceErrors{EndUserMessage: "deletion failed"}
-	}
+// 	if _, err = tx.Exec(q, req.UserId, req.UserDeviceID); err != nil {
+// 		tx.Rollback()
+// 		return &service_errors.ServiceErrors{EndUserMessage: "deletion failed"}
+// 	}
 
-	tx.Commit()
-	return nil
-}
+// 	tx.Commit()
+// 	return nil
+// }

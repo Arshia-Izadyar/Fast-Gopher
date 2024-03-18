@@ -1,8 +1,12 @@
 package handler
 
 import (
+	"github.com/Arshia-Izadyar/Fast-Gopher/src/api/dto"
+	"github.com/Arshia-Izadyar/Fast-Gopher/src/api/helper"
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/config"
+	"github.com/Arshia-Izadyar/Fast-Gopher/src/constants"
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/services"
+	"github.com/gofiber/fiber/v2"
 )
 
 type WhiteListHandler struct {
@@ -26,31 +30,22 @@ func NewWhiteListHandler(cfg *config.Config) *WhiteListHandler {
 // @Failure 500 {object} helper.Response "Internal Server Error"
 // @Router /w [get]
 // @Security AuthBearer
-// func (w *WhiteListHandler) Add(c *fiber.Ctx) error {
-// 	v := c.Locals(constants.UserIdKey).(string)
-// 	devId := c.Get(constants.DeviceIdKey)
-// 	uid, err := uuid.Parse(v)
+func (w *WhiteListHandler) Add(c *fiber.Ctx) error {
+	key := c.Locals(constants.Key).(string)
+	SessionId := c.Locals(constants.SessionIdKey).(string)
+	// sessionId := c.Get(constants.SessionIdKey)
 
-// 	if err != nil {
-// 		return c.Status(fiber.StatusInternalServerError).JSON(helper.GenerateResponseWithError(err, false))
-// 	}
-
-// 	deviceId, err := uuid.Parse(devId)
-// 	if err != nil {
-// 		return c.Status(fiber.StatusInternalServerError).JSON(helper.GenerateResponseWithError(&service_errors.ServiceErrors{EndUserMessage: "cant parse device uuid"}, false))
-// 	}
-
-// 	req := &dto.WhiteListAddDTO{
-// 		UserId:       uid,
-// 		UserDeviceID: deviceId,
-// 		UserIp:       c.IP(),
-// 	}
-// 	err = w.service.WhiteListRequest(req)
-// 	if err != nil {
-// 		return c.Status(fiber.StatusInternalServerError).JSON(helper.GenerateResponseWithError(err, false))
-// 	}
-// 	return c.Status(fiber.StatusCreated).JSON(helper.GenerateResponse("whitelisted", true))
-// }
+	req := &dto.WhiteListAddDTO{
+		Key:       key,
+		SessionId: SessionId,
+		UserIp:    "19.2.45.1",
+	}
+	err := w.service.WhiteListRequest(req)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(helper.GenerateResponseWithError(err, false))
+	}
+	return c.Status(fiber.StatusCreated).JSON(helper.GenerateResponse("whitelisted", true))
+}
 
 // Remove godoc
 // @Summary remove a device to the whitelist

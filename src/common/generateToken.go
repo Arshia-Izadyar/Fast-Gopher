@@ -69,15 +69,15 @@ func ValidateToken(token string, cfg *config.Config) (jwt.MapClaims, *service_er
 		return []byte(cfg.JWT.Secret), nil
 	})
 	if err != nil {
-		return nil, &service_errors.ServiceErrors{EndUserMessage: err.Error(), Status: 400}
+		return nil, &service_errors.ServiceErrors{EndUserMessage: err.Error(), Status: 401}
 	}
 	if claims, ok := tk.Claims.(jwt.MapClaims); ok {
 		exp := time.Unix(int64((claims[constants.ExpKey]).(float64)), 0)
 		now := time.Now()
 		if now.After(exp) {
-			return nil, &service_errors.ServiceErrors{EndUserMessage: service_errors.TokenExpired, Status: 400}
+			return nil, &service_errors.ServiceErrors{EndUserMessage: service_errors.TokenExpired, Status: 401}
 		}
 		return claims, nil
 	}
-	return nil, nil
+	return nil, &service_errors.ServiceErrors{EndUserMessage: service_errors.TokenInvalid, Status: 401}
 }
