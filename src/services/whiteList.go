@@ -7,7 +7,6 @@ import (
 	"os/exec"
 
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/api/dto"
-	"github.com/Arshia-Izadyar/Fast-Gopher/src/cmd/cmd"
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/config"
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/data/postgres"
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/pkg/service_errors"
@@ -43,13 +42,18 @@ func (wl *WhiteListService) WhiteListRequest(req *dto.WhiteListAddDTO) *service_
 	// ON CONFLICT (session_id, ac_keys_id) DO UPDATE
 	// SET ip = EXCLUDED.ip;
 	// `
+	tx, err := wl.db.Begin()
+	defer tx.Rollback()
+	if err != nil {
+		return &service_errors.ServiceErrors{EndUserMessage: "starting db transaction failed" + err.Error(), Err: err}
+	}
 
 	insQ := `
 		UPDATE active_devices
 		SET ip = $1
 		WHERE session_id = $2 AND ac_keys_id = $3;
 	`
-	r, err := wl.db.Exec(insQ, req.UserIp, req.SessionId, req.Key)
+	r, err := tx.Exec(insQ, req.UserIp, req.SessionId, req.Key)
 	if err != nil {
 		return &service_errors.ServiceErrors{EndUserMessage: "INSERT INTO active_devices " + err.Error(), Err: err}
 	}
@@ -62,27 +66,30 @@ func (wl *WhiteListService) WhiteListRequest(req *dto.WhiteListAddDTO) *service_
 		return &service_errors.ServiceErrors{EndUserMessage: "device is not in users active devices please request a session on key", Status: fiber.StatusForbidden}
 	}
 
-	pool := cmd.GetPool()
-	pool.Submit(a(req))
-	// go func() {
-	// 	wl.whiteListAdd(req) // run in background
-	// }()
+	if err := exec.Command("ipset", "-!", "add", "whitelist", req.UserIp).Run(); err != nil {
+		return &service_errors.ServiceErrors{EndUserMessage: fmt.Sprintf("Attempt 1: Failed to execute ipset command: %v\n", err), Status: fiber.StatusForbidden}
+	}
+	tx.Commit()
+
+	// pool := cmd.GetPool()
+	// pool.Submit(a(req))
+
 	return nil
 }
 func a(req *dto.WhiteListAddDTO) func() {
 	db := postgres.GetDB()
 
 	optQ := `
-			WITH ranked_devices AS (
-				SELECT id, ROW_NUMBER() OVER (PARTITION BY ac_keys_id ORDER BY created_at DESC) AS rn
-				FROM active_devices
-				WHERE ac_keys_id = $1
-			)
-			DELETE FROM active_devices
-			WHERE id IN (
-				SELECT id FROM ranked_devices WHERE rn > 5
-			);
-			`
+		WITH ranked_devices AS (
+			SELECT id, ROW_NUMBER() OVER (PARTITION BY ac_keys_id ORDER BY created_at DESC) AS rn
+			FROM active_devices
+			WHERE ac_keys_id = $1
+		)
+		DELETE FROM active_devices
+		WHERE id IN (
+			SELECT id FROM ranked_devices WHERE rn > 5
+		);
+	`
 
 	return func() {
 		tx, err := db.Begin()

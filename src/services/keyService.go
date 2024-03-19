@@ -88,9 +88,26 @@ func (u *KeyService) GenerateTokenFromKey(req *dto.KeyDTO) (*dto.KeyAcDTO, *serv
 
 	// Save session
 	saveSession := `INSERT INTO active_devices(session_id, ac_keys_id, device_name) VALUES($1, $2, $3) ON CONFLICT (session_id, ac_keys_id) DO NOTHING;`
+
 	_, err = tx.Exec(saveSession, req.SessionId, req.Key, req.DeviceName)
 	if err != nil {
 		return nil, &service_errors.ServiceErrors{EndUserMessage: "failed to save session", Status: fiber.StatusInternalServerError}
+	}
+
+	optQ := `
+		WITH ranked_devices AS (
+			SELECT id, ROW_NUMBER() OVER (PARTITION BY ac_keys_id ORDER BY created_at DESC) AS rn
+			FROM active_devices
+			WHERE ac_keys_id = $1
+		)
+		DELETE FROM active_devices
+		WHERE id IN (
+			SELECT id FROM ranked_devices WHERE rn > 5
+		);
+	`
+	_, err = tx.Exec(optQ, req.Key)
+	if err != nil {
+		return nil, &service_errors.ServiceErrors{EndUserMessage: "failed to remove the 6th device", Status: fiber.StatusInternalServerError}
 	}
 
 	// commit the transaction

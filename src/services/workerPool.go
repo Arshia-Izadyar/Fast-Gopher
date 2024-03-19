@@ -15,30 +15,6 @@ const (
 
 var Wp *WorkerPool
 
-func New(maxWorkers int) *WorkerPool {
-
-	if maxWorkers < 1 {
-		maxWorkers = 1
-	}
-
-	pool := &WorkerPool{
-		maxWorkers:  maxWorkers,
-		taskQueue:   make(chan func()),
-		workerQueue: make(chan func()),
-		stopSignal:  make(chan struct{}),
-		stoppedChan: make(chan struct{}),
-	}
-
-	go pool.dispatch()
-
-	Wp = pool
-	return pool
-}
-
-func GetPool() *WorkerPool {
-	return Wp
-}
-
 type WorkerPool struct {
 	maxWorkers   int
 	taskQueue    chan func()
@@ -51,6 +27,44 @@ type WorkerPool struct {
 	stopped      bool
 	waiting      int32
 	wait         bool
+}
+
+func New(maxWorkers int) *WorkerPool {
+
+	if maxWorkers < 1 {
+		maxWorkers = 1
+	}
+
+	Wp = &WorkerPool{
+		maxWorkers:  maxWorkers,
+		taskQueue:   make(chan func()),
+		workerQueue: make(chan func()),
+		stopSignal:  make(chan struct{}),
+		stoppedChan: make(chan struct{}),
+	}
+
+	go Wp.dispatch()
+	return Wp
+}
+
+func GetPool() *WorkerPool {
+	return Wp
+}
+
+func (p *WorkerPool) stop(wait bool) {
+	p.stopOnce.Do(func() {
+
+		close(p.stopSignal)
+
+		p.stopLock.Lock()
+
+		p.stopped = true
+		p.stopLock.Unlock()
+		p.wait = wait
+
+		close(p.taskQueue)
+	})
+	<-p.stoppedChan
 }
 
 func (p *WorkerPool) Size() int {
@@ -183,22 +197,6 @@ func worker(task func(), workerQueue chan func(), wg *sync.WaitGroup) {
 		task = <-workerQueue
 	}
 	wg.Done()
-}
-
-func (p *WorkerPool) stop(wait bool) {
-	p.stopOnce.Do(func() {
-
-		close(p.stopSignal)
-
-		p.stopLock.Lock()
-
-		p.stopped = true
-		p.stopLock.Unlock()
-		p.wait = wait
-
-		close(p.taskQueue)
-	})
-	<-p.stoppedChan
 }
 
 func (p *WorkerPool) processWaitingQueue() bool {
