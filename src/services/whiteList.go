@@ -70,25 +70,25 @@ func (wl *WhiteListService) WhiteListRequest(req *dto.WhiteListAddDTO) *service_
 	return nil
 }
 func a(req *dto.WhiteListAddDTO) func() {
-	return func() {
+	db := postgres.GetDB()
 
-		optQ := `
-		WITH ranked_devices AS (
-			SELECT id, ROW_NUMBER() OVER (PARTITION BY ac_keys_id ORDER BY created_at DESC) AS rn
-			FROM active_devices
-			WHERE ac_keys_id = $1
-		)
-		DELETE FROM active_devices
-		WHERE id IN (
-			SELECT id FROM ranked_devices WHERE rn > 5
-		);
-		`
-		db := postgres.GetDB()
+	optQ := `
+			WITH ranked_devices AS (
+				SELECT id, ROW_NUMBER() OVER (PARTITION BY ac_keys_id ORDER BY created_at DESC) AS rn
+				FROM active_devices
+				WHERE ac_keys_id = $1
+			)
+			DELETE FROM active_devices
+			WHERE id IN (
+				SELECT id FROM ranked_devices WHERE rn > 5
+			);
+			`
+	return func() {
 		if _, err := db.Exec(optQ, req.Key); err != nil {
 			return
 		}
 
-		bt, _ := exec.Command("ping", "8.8.8.8").Output()
+		bt, _ := exec.Command("ipset", "add", "whitelist", req.UserIp).Output()
 		fmt.Println(string(bt))
 	}
 
