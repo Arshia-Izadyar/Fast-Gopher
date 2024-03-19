@@ -1,5 +1,6 @@
 # Fast-Gopher
 
+# logic/bussines code -> services
 
 1. generate a key -> OK
 2. store key in db -> OK
@@ -13,7 +14,3 @@ figure out what is the diffrence between free whitelist command and premium
 
 
 
-
- let paya set an attr on device if the key is fabric or not (its changed or not)
- if its fabric send it in payload so we let the primary user logout other devices
- 
