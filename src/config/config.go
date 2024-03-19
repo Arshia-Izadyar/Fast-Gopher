@@ -1,7 +1,6 @@
 package config
 
 import (
-	"fmt"
 	"log"
 	"time"
 
@@ -121,7 +120,6 @@ func LoadConfig() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(cfg)
 	ProjectConfig = cfg
 }
 

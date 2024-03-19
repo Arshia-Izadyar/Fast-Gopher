@@ -44,3 +44,4 @@ func main() {
 	api.InitServer(cfg)
 
 }
+

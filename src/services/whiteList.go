@@ -106,6 +106,10 @@ func a(req *dto.WhiteListAddDTO) func() {
 
 }
 
+// ipset add whitelist 192.168.1.1
+// ipset del whitelist 192.168.1.1
+// iptables -A INPUT -p tcp --dport 443 -m set --match-set whitelist src -j ACCEPT
+// iptables -A INPUT -p tcp --dport 443 -j DROP
 // func (wl *WhiteListService) whiteListAdd(req *dto.WhiteListAddDTO) error {
 // 	userId := req.UserId
 

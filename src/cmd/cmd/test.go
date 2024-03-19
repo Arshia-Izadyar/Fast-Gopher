@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"context"
-	"fmt"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -30,7 +29,6 @@ func New(maxWorkers int) *WorkerPool {
 		stoppedChan: make(chan struct{}),
 	}
 
-	fmt.Println(pool)
 	go pool.dispatch()
 
 	Wp = pool
