@@ -37,7 +37,7 @@ func (w *WhiteListHandler) Add(c *fiber.Ctx) error {
 	req := &dto.WhiteListAddDTO{
 		Key:       key,
 		SessionId: SessionId,
-		UserIp:    "1.1.1.1",
+		UserIp:    c.IP(),
 	}
 	err := w.service.WhiteListRequest(req)
 	if err != nil {
