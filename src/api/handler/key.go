@@ -42,6 +42,9 @@ func (h *KeyHandler) Refresh(c *fiber.Ctx) error {
 	if err != nil {
 		log.Fatal(err)
 	}
+	if req.RefreshToken == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(helper.GenerateResponseWithError(&service_errors.ServiceErrors{EndUserMessage: "please provide 'refresh_token'"}, true))
+	}
 	tk, sErr := h.service.Refresh(req)
 	if sErr != nil {
 		return c.Status(sErr.Status).JSON(helper.GenerateResponseWithError(sErr, true))

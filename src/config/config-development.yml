@@ -1,6 +1,7 @@
 Server:
   Port: 4000
   runMode: debug
+  workerCount: 350
 logger:
   filePath: ../logs/
   encoding: json
@@ -9,7 +10,7 @@ logger:
 cors:
   allowOrigins: "*"
 postgres:
-  host: "localhost"
+  host: "51.195.26.201"
   port: 5432
   user: arshia
   password: a123

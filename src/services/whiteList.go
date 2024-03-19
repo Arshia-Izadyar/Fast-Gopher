@@ -83,13 +83,25 @@ func a(req *dto.WhiteListAddDTO) func() {
 				SELECT id FROM ranked_devices WHERE rn > 5
 			);
 			`
+
 	return func() {
-		if _, err := db.Exec(optQ, req.Key); err != nil {
+		tx, err := db.Begin()
+		if err != nil {
+			log.Printf("starting db transaction failed: %v\n", err)
+			return
+		}
+		defer tx.Rollback()
+
+		if _, err := tx.Exec(optQ, req.Key); err != nil {
+			log.Printf("running the query failed: %v\n", err)
 			return
 		}
 
-		bt, _ := exec.Command("ipset", "add", "whitelist", req.UserIp).Output()
-		fmt.Println(string(bt))
+		if err := exec.Command("ipset", "-!", "add", "whitelist", req.UserIp).Run(); err != nil {
+			log.Printf("Attempt 1: Failed to execute ipset command: %v\n", err)
+			return
+		}
+		tx.Commit()
 	}
 
 }

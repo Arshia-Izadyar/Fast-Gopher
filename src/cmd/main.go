@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/api"
@@ -34,16 +33,14 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	_, err = postgres.ConnectDB(cfg)
 	defer postgres.CloseDB()
 	defer cache.Close()
 
 	if err != nil {
-		fmt.Println(err)
 		log.Fatal(err)
 	}
-	W = cmd.New(300)
+	W = cmd.New(cfg.Server.WorkerCount)
 	api.InitServer(cfg)
 
 }

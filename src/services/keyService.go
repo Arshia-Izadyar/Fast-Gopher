@@ -32,9 +32,12 @@ func NewKeyService(cfg *config.Config) *KeyService {
 
 // service for /key
 func (u *KeyService) GenerateKey(req *dto.GenerateKeyDTO) (*dto.KeyAcDTO, *service_errors.ServiceErrors) {
+	if req.DeviceName == "" {
+		req.DeviceName = "unknown-device"
+	}
 	tx, err := u.db.Begin()
 	if err != nil {
-		return nil, &service_errors.ServiceErrors{EndUserMessage: "database transaction start error", Status: fiber.StatusInternalServerError, Err: err}
+		return nil, &service_errors.ServiceErrors{EndUserMessage: "database transaction start error: " + err.Error(), Status: fiber.StatusInternalServerError, Err: err}
 	}
 	defer tx.Rollback()
 
@@ -50,7 +53,7 @@ func (u *KeyService) GenerateKey(req *dto.GenerateKeyDTO) (*dto.KeyAcDTO, *servi
 		if pqErr, ok := err.(*pq.Error); ok && pqErr.Code == "23505" {
 			return nil, &service_errors.ServiceErrors{EndUserMessage: "the key already exists try getting another key", Status: fiber.StatusForbidden}
 		}
-		return nil, &service_errors.ServiceErrors{EndUserMessage: "insert query failed", Status: fiber.StatusInternalServerError}
+		return nil, &service_errors.ServiceErrors{EndUserMessage: "insert query failed" + err.Error(), Status: fiber.StatusInternalServerError}
 	}
 
 	saveSession := `
