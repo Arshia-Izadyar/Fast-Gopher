@@ -5,10 +5,8 @@ import (
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/api/helper"
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/config"
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/constants"
-	"github.com/Arshia-Izadyar/Fast-Gopher/src/pkg/service_errors"
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/services"
 	"github.com/gofiber/fiber/v2"
-	"github.com/google/uuid"
 )
 
 type WhiteListHandler struct {
@@ -27,33 +25,50 @@ func NewWhiteListHandler(cfg *config.Config) *WhiteListHandler {
 // @Tags Whitelist
 // @Accept json
 // @Produce json
-// @Param Device-Id header string true "Device-Id"
 // @Success 201 {object} helper.Response "Successfully whitelisted the device"
 // @Failure 500 {object} helper.Response "Internal Server Error"
 // @Router /w [get]
-// @Security AuthBearer
+// @Security ApiKeyAuth
 func (w *WhiteListHandler) Add(c *fiber.Ctx) error {
-	v := c.Locals(constants.UserIdKey).(string)
-	devId := c.Get(constants.DeviceIdKey)
-	uid, err := uuid.Parse(v)
-
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(helper.GenerateResponseWithError(err, false))
-	}
-
-	deviceId, err := uuid.Parse(devId)
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(helper.GenerateResponseWithError(&service_errors.ServiceError{EndUserMessage: "cant parse device uuid"}, false))
-	}
+	key := c.Locals(constants.Key).(string)
+	SessionId := c.Locals(constants.SessionIdKey).(string)
+	// sessionId := c.Get(constants.SessionIdKey)
 
 	req := &dto.WhiteListAddDTO{
-		UserId:       uid,
-		UserDeviceID: deviceId,
-		UserIp:       c.IP(),
+		Key:       key,
+		SessionId: SessionId,
+		UserIp:    c.IP(),
 	}
-	err = w.service.WhiteListRequest(req)
+	err := w.service.WhiteListRequest(req)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(helper.GenerateResponseWithError(err, false))
+		return c.Status(err.Status).JSON(helper.GenerateResponseWithError(err, false))
+	}
+	return c.Status(fiber.StatusCreated).JSON(helper.GenerateResponse("whitelisted", true))
+}
+
+// Add godoc
+// @Summary Add a device to the whitelist (free premium)
+// @Description Adds a device IP and its identifier to the user's whitelist, ensuring the device is allowed to access the service.
+// @Tags Whitelist
+// @Accept json
+// @Produce json
+// @Success 201 {object} helper.Response "Successfully whitelisted the device"
+// @Failure 500 {object} helper.Response "Internal Server Error"
+// @Router /w/premium [get]
+// @Security ApiKeyAuth
+func (w *WhiteListHandler) PremiumAdd(c *fiber.Ctx) error {
+	key := c.Locals(constants.Key).(string)
+	SessionId := c.Locals(constants.SessionIdKey).(string)
+	// sessionId := c.Get(constants.SessionIdKey)
+
+	req := &dto.WhiteListAddDTO{
+		Key:       key,
+		SessionId: SessionId,
+		UserIp:    c.IP(),
+	}
+	err := w.service.WhiteListRequest(req)
+	if err != nil {
+		return c.Status(err.Status).JSON(helper.GenerateResponseWithError(err, false))
 	}
 	return c.Status(fiber.StatusCreated).JSON(helper.GenerateResponse("whitelisted", true))
 }
@@ -64,33 +79,21 @@ func (w *WhiteListHandler) Add(c *fiber.Ctx) error {
 // @Tags Whitelist
 // @Accept json
 // @Produce json
-// @Param DeviceIdKey header string true "Device-Id"
 // @Success 201 {object} helper.Response "Successfully whitelisted the device"
 // @Failure 500 {object} helper.Response "Internal Server Error"
 // @Router /rw [get]
-// @Security AuthBearer
+// @Security ApiKeyAuth
 func (w *WhiteListHandler) Remove(c *fiber.Ctx) error {
-	v := c.Locals(constants.UserIdKey).(string)
-	devId := c.Get(constants.DeviceIdKey)
-	uid, err := uuid.Parse(v)
-
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(helper.GenerateResponseWithError(err, false))
-	}
-
-	deviceId, err := uuid.Parse(devId)
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(helper.GenerateResponseWithError(&service_errors.ServiceError{EndUserMessage: "cant parse device uuid"}, false))
-	}
-
+	key := c.Locals(constants.Key).(string)
+	sessionId := c.Locals(constants.SessionIdKey).(string)
 	req := &dto.WhiteListAddDTO{
-		UserId:       uid,
-		UserDeviceID: deviceId,
-		UserIp:       c.IP(),
+		Key:       key,
+		SessionId: sessionId,
+		UserIp:    "",
 	}
-	err = w.service.WhiteListRemove(req)
+	err := w.service.WhiteListRemove(req)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(helper.GenerateResponseWithError(err, false))
+		return c.Status(err.Status).JSON(helper.GenerateResponseWithError(err, false))
 	}
-	return c.Status(fiber.StatusCreated).JSON(helper.GenerateResponse("whitelist removed", true))
+	return c.Status(fiber.StatusCreated).JSON(helper.GenerateResponse("device removed from whitelist", true))
 }

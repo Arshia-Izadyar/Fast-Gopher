@@ -23,228 +23,14 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/auth/callback/google": {
-            "get": {
-                "security": [
-                    {
-                        "None": []
-                    }
-                ],
-                "description": "login a user",
-                "consumes": [
-                    "application/json"
-                ],
-                "tags": [
-                    "User"
-                ],
-                "summary": "login a user with Code from google call back",
-                "parameters": [
-                    {
-                        "maxLength": 40,
-                        "minLength": 5,
-                        "type": "string",
-                        "description": "code from google",
-                        "name": "code",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Create a user response",
-                        "schema": {
-                            "$ref": "#/definitions/helper.Response"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad request",
-                        "schema": {
-                            "$ref": "#/definitions/helper.Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/forgot": {
+        "/auth/refresh": {
             "post": {
-                "description": "password forget.",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "User"
-                ],
-                "summary": "User password forget",
-                "parameters": [
-                    {
-                        "description": "change users password",
-                        "name": "Request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.ForgotPasswordDTO"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "message: password changed",
-                        "schema": {
-                            "$ref": "#/definitions/helper.Response"
-                        }
-                    },
-                    "400": {
-                        "description": "message: error message",
-                        "schema": {
-                            "$ref": "#/definitions/helper.Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/forgot/otp": {
-            "post": {
-                "description": "send otp for password forget.",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "User"
-                ],
-                "summary": "User password rest",
-                "parameters": [
-                    {
-                        "description": "send a otp for forgot password",
-                        "name": "Request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.ForgotPasswordOtpDTO"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "message: password otp sent",
-                        "schema": {
-                            "$ref": "#/definitions/helper.Response"
-                        }
-                    },
-                    "400": {
-                        "description": "message: error message",
-                        "schema": {
-                            "$ref": "#/definitions/helper.Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/google": {
-            "get": {
-                "description": "login a user with google",
-                "consumes": [
-                    "application/json"
-                ],
-                "tags": [
-                    "User"
-                ],
-                "summary": "login a user with google",
-                "responses": {
-                    "200": {
-                        "description": "Create a user response",
-                        "schema": {
-                            "$ref": "#/definitions/helper.Response"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad request",
-                        "schema": {
-                            "$ref": "#/definitions/helper.Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/google/login": {
-            "get": {
-                "description": "login a user",
-                "consumes": [
-                    "application/json"
-                ],
-                "tags": [
-                    "User"
-                ],
-                "summary": "login a user",
-                "parameters": [
-                    {
-                        "maxLength": 40,
-                        "minLength": 5,
-                        "type": "string",
-                        "description": "code from google",
-                        "name": "code",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Create a user response",
-                        "schema": {
-                            "$ref": "#/definitions/helper.Response"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad request",
-                        "schema": {
-                            "$ref": "#/definitions/helper.Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/login": {
-            "post": {
-                "description": "login a user",
-                "consumes": [
-                    "application/json"
-                ],
-                "tags": [
-                    "User"
-                ],
-                "summary": "login a user",
-                "parameters": [
-                    {
-                        "description": "Create a user",
-                        "name": "Request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.UserDTO"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Create a user response",
-                        "schema": {
-                            "$ref": "#/definitions/helper.Response"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad request",
-                        "schema": {
-                            "$ref": "#/definitions/helper.Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/logout": {
-            "get": {
                 "security": [
                     {
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Logs out a user by invalidating the user's session.",
+                "description": "Refresh JWT with refresh_token and generate new tokens and will blacklist current refresh token.",
                 "consumes": [
                     "application/json"
                 ],
@@ -252,56 +38,12 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "User"
+                    "Authentication"
                 ],
-                "summary": "User logout",
+                "summary": "Refresh JWT with refresh_token",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "Authentication Token",
-                        "name": "AuthenticationKey",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Device-Id",
-                        "name": "DeviceIdKey",
-                        "in": "header",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "message: user logged out",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
-                    "400": {
-                        "description": "message: error message",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    }
-                }
-            }
-        },
-        "/refresh": {
-            "post": {
-                "description": "generate a new token from refresh.",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "User"
-                ],
-                "summary": "User Refresh",
-                "parameters": [
-                    {
-                        "description": "Create a new token",
+                        "description": "Create a new atoken and rtoken",
                         "name": "Request",
                         "in": "body",
                         "required": true,
@@ -311,51 +53,14 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "201": {
-                        "description": "message: new rToken and aToken",
-                        "schema": {
-                            "$ref": "#/definitions/dto.UserTokenDTO"
-                        }
-                    },
-                    "400": {
-                        "description": "message: error message",
-                        "schema": {
-                            "$ref": "#/definitions/helper.Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/register": {
-            "post": {
-                "description": "create a new user",
-                "consumes": [
-                    "application/json"
-                ],
-                "tags": [
-                    "User"
-                ],
-                "summary": "Create a user",
-                "parameters": [
-                    {
-                        "description": "Create a user",
-                        "name": "Request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.UserCreateDTO"
-                        }
-                    }
-                ],
-                "responses": {
                     "200": {
-                        "description": "Create a user response",
+                        "description": "message: helper.Response",
                         "schema": {
-                            "$ref": "#/definitions/helper.Response"
+                            "$ref": "#/definitions/dto.KeyAcDTO"
                         }
                     },
                     "400": {
-                        "description": "Bad request",
+                        "description": "message: helper.Response",
                         "schema": {
                             "$ref": "#/definitions/helper.Response"
                         }
@@ -363,36 +68,164 @@ const docTemplate = `{
                 }
             }
         },
-        "/reset": {
-            "put": {
-                "description": "Reset User password.",
+        "/key": {
+            "post": {
+                "description": "generate a new Key when new users install the APP.",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "User"
+                    "Key"
                 ],
-                "summary": "User Refresh",
+                "summary": "Generate a new key",
                 "parameters": [
                     {
-                        "description": "request for password change",
+                        "description": "Create a new token",
                         "name": "Request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.ResetPasswordDTO"
+                            "$ref": "#/definitions/dto.GenerateKeyDTO"
                         }
                     }
                 ],
                 "responses": {
-                    "202": {
-                        "description": "message: password Changed",
+                    "201": {
+                        "description": "message: new rToken and aToken + key",
+                        "schema": {
+                            "$ref": "#/definitions/dto.KeyAcDTO"
+                        }
+                    },
+                    "400": {
+                        "description": "message: error message",
+                        "schema": {
+                            "$ref": "#/definitions/helper.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/key/tk": {
+            "post": {
+                "description": "generate a Key when.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Key"
+                ],
+                "summary": "Generate a new Token based on already existing key",
+                "parameters": [
+                    {
+                        "description": "Create a new token",
+                        "name": "Request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.KeyDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "message: new rToken and aToken",
+                        "schema": {
+                            "$ref": "#/definitions/dto.KeyAcDTO"
+                        }
+                    },
+                    "400": {
+                        "description": "message: error message",
+                        "schema": {
+                            "$ref": "#/definitions/helper.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "message: fuck",
+                        "schema": {
+                            "$ref": "#/definitions/helper.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/rm": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "remove a single device from list\\nafter removing a device from list you get a 403 error on whitelist end point after that get a new key from /key.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Key"
+                ],
+                "summary": "Remove a device",
+                "parameters": [
+                    {
+                        "description": "info for device",
+                        "name": "Request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.RemoveDeviceDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "message: removed",
                         "schema": {
                             "$ref": "#/definitions/helper.Response"
                         }
                     },
                     "400": {
                         "description": "message: error message",
+                        "schema": {
+                            "$ref": "#/definitions/helper.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "message: fuck",
+                        "schema": {
+                            "$ref": "#/definitions/helper.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/rm/all": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "remove all devices from list except the current device\\nafter removing a device from list you get a 403 error on whitelist end point after that get a new key from /key.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Key"
+                ],
+                "summary": "Remove all devices",
+                "responses": {
+                    "204": {
+                        "description": "message: removed",
+                        "schema": {
+                            "$ref": "#/definitions/helper.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "message: error message",
+                        "schema": {
+                            "$ref": "#/definitions/helper.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "message: fuck",
                         "schema": {
                             "$ref": "#/definitions/helper.Response"
                         }
@@ -404,7 +237,7 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "AuthBearer": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "removes a device IP and its identifier to the user's whitelist, ensuring the device is not allowed to access the service.",
@@ -418,15 +251,6 @@ const docTemplate = `{
                     "Whitelist"
                 ],
                 "summary": "remove a device to the whitelist",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Device-Id",
-                        "name": "DeviceIdKey",
-                        "in": "header",
-                        "required": true
-                    }
-                ],
                 "responses": {
                     "201": {
                         "description": "Successfully whitelisted the device",
@@ -443,11 +267,51 @@ const docTemplate = `{
                 }
             }
         },
+        "/show": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "show all of active devices.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Key"
+                ],
+                "summary": "show all of currently active sessions",
+                "responses": {
+                    "201": {
+                        "description": "message: list of devices",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/dto.DeviceDTO"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "message: error message",
+                        "schema": {
+                            "$ref": "#/definitions/helper.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "message: fuck",
+                        "schema": {
+                            "$ref": "#/definitions/helper.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/w": {
             "get": {
                 "security": [
                     {
-                        "AuthBearer": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Adds a device IP and its identifier to the user's whitelist, ensuring the device is allowed to access the service.",
@@ -461,15 +325,6 @@ const docTemplate = `{
                     "Whitelist"
                 ],
                 "summary": "Add a device to the whitelist",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Device-Id",
-                        "name": "Device-Id",
-                        "in": "header",
-                        "required": true
-                    }
-                ],
                 "responses": {
                     "201": {
                         "description": "Successfully whitelisted the device",
@@ -488,30 +343,63 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "dto.ForgotPasswordDTO": {
+        "dto.DeviceDTO": {
             "type": "object",
             "properties": {
-                "email": {
+                "device_name": {
                     "type": "string"
                 },
-                "new_password": {
+                "ip": {
                     "type": "string"
                 },
-                "new_password_confirm": {
-                    "type": "string"
-                },
-                "otp": {
+                "session_id": {
                     "type": "string"
                 }
             }
         },
-        "dto.ForgotPasswordOtpDTO": {
+        "dto.GenerateKeyDTO": {
             "type": "object",
             "required": [
-                "email"
+                "session_id"
             ],
             "properties": {
-                "email": {
+                "device_name": {
+                    "type": "string"
+                },
+                "session_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.KeyAcDTO": {
+            "type": "object",
+            "properties": {
+                "access_token": {
+                    "type": "string"
+                },
+                "key": {
+                    "type": "string"
+                },
+                "refresh_token": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.KeyDTO": {
+            "type": "object",
+            "required": [
+                "device_name",
+                "key",
+                "session_id"
+            ],
+            "properties": {
+                "device_name": {
+                    "type": "string"
+                },
+                "key": {
+                    "type": "string"
+                },
+                "session_id": {
                     "type": "string"
                 }
             }
@@ -527,66 +415,17 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.ResetPasswordDTO": {
+        "dto.RemoveDeviceDTO": {
             "type": "object",
             "required": [
-                "current_password",
-                "new_password",
-                "new_password_confirm"
+                "device_name",
+                "session_id"
             ],
             "properties": {
-                "current_password": {
+                "device_name": {
                     "type": "string"
                 },
-                "new_password": {
-                    "type": "string"
-                },
-                "new_password_confirm": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.UserCreateDTO": {
-            "type": "object",
-            "required": [
-                "email",
-                "password",
-                "password_confirm"
-            ],
-            "properties": {
-                "email": {
-                    "type": "string"
-                },
-                "password": {
-                    "type": "string"
-                },
-                "password_confirm": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.UserDTO": {
-            "type": "object",
-            "required": [
-                "email",
-                "password"
-            ],
-            "properties": {
-                "email": {
-                    "type": "string"
-                },
-                "password": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.UserTokenDTO": {
-            "type": "object",
-            "properties": {
-                "access_token": {
-                    "type": "string"
-                },
-                "refresh_token": {
+                "session_id": {
                     "type": "string"
                 }
             }
@@ -616,7 +455,7 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "0.1",
-	Host:             "localhost:4000",
+	Host:             "127.0.0.1:4000",
 	BasePath:         "/api/v1",
 	Schemes:          []string{},
 	Title:            "Internal auth",

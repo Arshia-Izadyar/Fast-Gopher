@@ -3,6 +3,7 @@ package services
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"os/exec"
 
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/api/dto"
@@ -10,6 +11,7 @@ import (
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/config"
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/data/postgres"
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/pkg/service_errors"
+	"github.com/gofiber/fiber/v2"
 )
 
 /*
@@ -33,16 +35,31 @@ func NewWhiteListService(cfg *config.Config) *WhiteListService {
 	}
 }
 
-func (wl *WhiteListService) WhiteListRequest(req *dto.WhiteListAddDTO) error {
+func (wl *WhiteListService) WhiteListRequest(req *dto.WhiteListAddDTO) *service_errors.ServiceErrors {
+
+	// insQ := `
+	// INSERT INTO active_devices (session_id, ac_keys_id, ip)
+	// VALUES ($1, $2, $3)
+	// ON CONFLICT (session_id, ac_keys_id) DO UPDATE
+	// SET ip = EXCLUDED.ip;
+	// `
 
 	insQ := `
-	INSERT INTO active_devices (device_id, user_id, ips) 
-    VALUES ($1, $2, $3)
-    ON CONFLICT (device_id, user_id) DO UPDATE
-    SET ips = EXCLUDED.ips;
+		UPDATE active_devices
+		SET ip = $1
+		WHERE session_id = $2 AND ac_keys_id = $3;
 	`
-	if _, err := wl.db.Exec(insQ, req.UserDeviceID, req.UserId, req.UserIp); err != nil {
-		return &service_errors.ServiceError{EndUserMessage: "INSERT INTO active_devices " + err.Error(), Err: err}
+	r, err := wl.db.Exec(insQ, req.UserIp, req.SessionId, req.Key)
+	if err != nil {
+		return &service_errors.ServiceErrors{EndUserMessage: "INSERT INTO active_devices " + err.Error(), Err: err}
+	}
+
+	count, err := r.RowsAffected()
+	if err != nil {
+		log.Fatal(err)
+	}
+	if count == 0 {
+		return &service_errors.ServiceErrors{EndUserMessage: "device is not in users active devices please request a session on key", Status: fiber.StatusForbidden}
 	}
 
 	pool := cmd.GetPool()
@@ -53,69 +70,84 @@ func (wl *WhiteListService) WhiteListRequest(req *dto.WhiteListAddDTO) error {
 	return nil
 }
 func a(req *dto.WhiteListAddDTO) func() {
-	return func() {
-		userId := req.UserId
+	db := postgres.GetDB()
 
-		optQ := `
-		WITH ranked_devices AS (
-			SELECT id, ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY created_at ASC) AS rn
-			FROM active_devices
-			WHERE user_id = $1
-		)
-		DELETE FROM active_devices
-		WHERE id IN (
-			SELECT id FROM ranked_devices WHERE rn > 5
-		);
-		`
-		db := postgres.GetDB()
-		if _, err := db.Exec(optQ, userId); err != nil {
+	optQ := `
+			WITH ranked_devices AS (
+				SELECT id, ROW_NUMBER() OVER (PARTITION BY ac_keys_id ORDER BY created_at DESC) AS rn
+				FROM active_devices
+				WHERE ac_keys_id = $1
+			)
+			DELETE FROM active_devices
+			WHERE id IN (
+				SELECT id FROM ranked_devices WHERE rn > 5
+			);
+			`
+
+	return func() {
+		tx, err := db.Begin()
+		if err != nil {
+			log.Printf("starting db transaction failed: %v\n", err)
+			return
+		}
+		defer tx.Rollback()
+
+		if _, err := tx.Exec(optQ, req.Key); err != nil {
+			log.Printf("running the query failed: %v\n", err)
 			return
 		}
 
-		bt, _ := exec.Command("ping", "8.8.8.8").Output()
-		fmt.Println(string(bt))
+		if err := exec.Command("ipset", "-!", "add", "whitelist", req.UserIp).Run(); err != nil {
+			log.Printf("Attempt 1: Failed to execute ipset command: %v\n", err)
+			return
+		}
+		tx.Commit()
 	}
 
 }
 
-func (wl *WhiteListService) whiteListAdd(req *dto.WhiteListAddDTO) error {
-	userId := req.UserId
+// ipset add whitelist 192.168.1.1
+// ipset del whitelist 192.168.1.1
+// iptables -A INPUT -p tcp --dport 443 -m set --match-set whitelist src -j ACCEPT
+// iptables -A INPUT -p tcp --dport 443 -j DROP
+// func (wl *WhiteListService) whiteListAdd(req *dto.WhiteListAddDTO) error {
+// 	userId := req.UserId
 
-	optQ := `
-	WITH ranked_devices AS (
-		SELECT id, ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY created_at ASC) AS rn
-		FROM active_devices
-		WHERE user_id = $1
-	)
-	DELETE FROM active_devices
-	WHERE id IN (
-		SELECT id FROM ranked_devices WHERE rn > 5
-	);
-	`
-	if _, err := wl.db.Exec(optQ, userId); err != nil {
-		return &service_errors.ServiceError{EndUserMessage: "Optimized deletion error: " + err.Error(), Err: err}
-	}
+// 	optQ := `
+// 	WITH ranked_devices AS (
+// 		SELECT id, ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY created_at ASC) AS rn
+// 		FROM active_devices
+// 		WHERE user_id = $1
+// 	)
+// 	DELETE FROM active_devices
+// 	WHERE id IN (
+// 		SELECT id FROM ranked_devices WHERE rn > 5
+// 	);
+// 	`
+// 	if _, err := wl.db.Exec(optQ, userId); err != nil {
+// 		return &service_errors.ServiceErrors{EndUserMessage: "Optimized deletion error: " + err.Error(), Err: err}
+// 	}
+// 	return nil
+// }
 
-	return nil
-}
-
-func (wl *WhiteListService) WhiteListRemove(req *dto.WhiteListAddDTO) error {
+func (wl *WhiteListService) WhiteListRemove(req *dto.WhiteListAddDTO) *service_errors.ServiceErrors {
 	// find user
 	// del device
 	// bye
 
 	tx, err := wl.db.Begin()
 	if err != nil {
-		return &service_errors.ServiceError{EndUserMessage: service_errors.InternalError}
+		return &service_errors.ServiceErrors{EndUserMessage: service_errors.InternalError}
 	}
 
 	q := `
-	DELETE FROM active_devices where user_id = $1 AND device_id = $2;
+	DELETE FROM active_devices where ac_keys_id = $1 AND session_id = $2;
 	`
 
-	if _, err = tx.Exec(q, req.UserId, req.UserDeviceID); err != nil {
+	if _, err = tx.Exec(q, req.Key, req.SessionId); err != nil {
 		tx.Rollback()
-		return &service_errors.ServiceError{EndUserMessage: "deletion failed"}
+		fmt.Println(err)
+		return &service_errors.ServiceErrors{EndUserMessage: "deletion failed", Status: fiber.StatusInternalServerError}
 	}
 
 	tx.Commit()

@@ -1,4 +1,4 @@
-DROP TABLE IF EXISTS users cascade;
+DROP TABLE IF EXISTS ac_keys cascade;
 DROP TABLE IF EXISTS active_devices;
 
 

@@ -18,7 +18,7 @@ import (
 // @contact.email arshiaa104@gmail.com
 // @license.name Apache 2.0
 // @license.url http://www.apache.org/licenses/LICENSE-2.0.html
-// @host localhost:4000
+// @host 127.0.0.1:4000
 // @BasePath /api/v1
 // @securityDefinitions.apikey ApiKeyAuth
 // @in header
@@ -33,7 +33,6 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	_, err = postgres.ConnectDB(cfg)
 	defer postgres.CloseDB()
 	defer cache.Close()
@@ -41,7 +40,8 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	W = cmd.New(300)
+	W = cmd.New(cfg.Server.WorkerCount)
 	api.InitServer(cfg)
 
 }
+

@@ -67,16 +67,16 @@ func test(req *dto.WhiteListAddDTO) error {
 	db := postgres.GetDB()
 	tx, err := db.Begin()
 	if err != nil {
-		return &service_errors.ServiceError{EndUserMessage: service_errors.InternalError}
+		return &service_errors.ServiceErrors{EndUserMessage: service_errors.InternalError}
 	}
 
 	q := `
-		DELETE FROM active_devices where user_id = $1 AND device_id = $2;
+		DELETE FROM active_devices where ac_keys_id = $1 AND session_id = $2;
 	`
 
-	if _, err = tx.Exec(q, req.UserId, req.UserDeviceID); err != nil {
+	if _, err = tx.Exec(q, req.Key, req.SessionId); err != nil {
 		tx.Rollback()
-		return &service_errors.ServiceError{EndUserMessage: "deletion failed"}
+		return &service_errors.ServiceErrors{EndUserMessage: "deletion failed"}
 	}
 
 	tx.Commit()
