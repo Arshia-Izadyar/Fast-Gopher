@@ -10,7 +10,7 @@ import (
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/data/postgres"
 )
 
-// @title Internal auth
+// @title Internal AUTH
 // @version 0.1
 // @description internal service for Auth
 // @termsOfService Lol
@@ -19,7 +19,6 @@ import (
 // @license.name Apache 2.0
 // @license.url http://www.apache.org/licenses/LICENSE-2.0.html
 // @host dev-1.paya.dev:80
-// @host http://51.195.26.201:4000
 // @BasePath /api/v1
 // @securityDefinitions.apikey ApiKeyAuth
 // @in header
@@ -27,6 +26,8 @@ import (
 var W *cmd.WorkerPool
 
 func main() {
+	// host 51.195.26.201:4000
+
 	config.LoadConfig()
 	cfg := config.GetConfig()
 	err := cache.InitRedis(cfg)

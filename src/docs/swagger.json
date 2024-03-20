@@ -2,7 +2,7 @@
     "swagger": "2.0",
     "info": {
         "description": "internal service for Auth",
-        "title": "Internal auth",
+        "title": "Internal AUTH",
         "termsOfService": "Lol",
         "contact": {
             "name": "API Support",
@@ -14,7 +14,7 @@
         },
         "version": "0.1"
     },
-    "host": "http://51.195.26.201:4000",
+    "host": "dev-1.paya.dev:8000",
     "basePath": "/api/v1",
     "paths": {
         "/auth/refresh": {
