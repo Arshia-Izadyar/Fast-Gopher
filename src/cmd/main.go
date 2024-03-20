@@ -15,10 +15,10 @@ import (
 // @description internal service for Auth
 // @termsOfService Kir
 // @contact.name API Support
-// @contact.email arshiaa104@gmail.com
+// @contact.email a@gmail.com
 // @license.name Apache 2.0
 // @license.url http://www.apache.org/licenses/LICENSE-2.0.html
-// @host 127.0.0.1:4000
+// @host 5.161.134.47:4000
 // @BasePath /api/v1
 // @securityDefinitions.apikey ApiKeyAuth
 // @in header
