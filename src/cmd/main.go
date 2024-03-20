@@ -13,7 +13,7 @@ import (
 // @title Internal auth
 // @version 0.1
 // @description internal service for Auth
-// @termsOfService Kir
+// @termsOfService Lol
 // @contact.name API Support
 // @contact.email a@gmail.com
 // @license.name Apache 2.0
