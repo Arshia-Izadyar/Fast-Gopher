@@ -373,6 +373,14 @@ const docTemplate = `{
                     "Whitelist"
                 ],
                 "summary": "Add a device to the whitelist",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "token",
+                        "name": "tk",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "201": {
                         "description": "Successfully whitelisted the device",
@@ -407,6 +415,14 @@ const docTemplate = `{
                     "Whitelist"
                 ],
                 "summary": "Add a device to the whitelist (free premium)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "token",
+                        "name": "tk",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "201": {
                         "description": "Successfully whitelisted the device",

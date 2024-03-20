@@ -303,6 +303,11 @@ paths:
       - application/json
       description: Adds a device IP and its identifier to the user's whitelist, ensuring
         the device is allowed to access the service.
+      parameters:
+      - description: token
+        in: query
+        name: tk
+        type: string
       produces:
       - application/json
       responses:
@@ -325,6 +330,11 @@ paths:
       - application/json
       description: Adds a device IP and its identifier to the user's whitelist, ensuring
         the device is allowed to access the service.
+      parameters:
+      - description: token
+        in: query
+        name: tk
+        type: string
       produces:
       - application/json
       responses:

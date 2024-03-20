@@ -3,6 +3,7 @@ package handler
 import (
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/api/dto"
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/api/helper"
+	"github.com/Arshia-Izadyar/Fast-Gopher/src/common"
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/config"
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/constants"
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/services"
@@ -11,11 +12,13 @@ import (
 
 type WhiteListHandler struct {
 	service *services.WhiteListService
+	cfg     *config.Config
 }
 
 func NewWhiteListHandler(cfg *config.Config) *WhiteListHandler {
 	return &WhiteListHandler{
 		service: services.NewWhiteListService(cfg),
+		cfg:     cfg,
 	}
 }
 
@@ -25,18 +28,23 @@ func NewWhiteListHandler(cfg *config.Config) *WhiteListHandler {
 // @Tags Whitelist
 // @Accept json
 // @Produce json
+// @Param        tk    query     string  false  "token"
 // @Success 201 {object} helper.Response "Successfully whitelisted the device"
 // @Failure 500 {object} helper.Response "Internal Server Error"
 // @Router /w [get]
 // @Security ApiKeyAuth
 func (w *WhiteListHandler) Add(c *fiber.Ctx) error {
-	key := c.Locals(constants.Key).(string)
-	SessionId := c.Locals(constants.SessionIdKey).(string)
-	// sessionId := c.Get(constants.SessionIdKey)
+	token := c.Query("tk")
+	claims, sErr := common.ValidateToken(token, w.cfg)
+	if sErr != nil {
+		return c.Status(sErr.Status).JSON(helper.GenerateResponseWithError(sErr, false))
+	}
+	key := claims[constants.Key].(string)
+	sessionId := claims[constants.SessionIdKey].(string)
 
 	req := &dto.WhiteListAddDTO{
 		Key:       key,
-		SessionId: SessionId,
+		SessionId: sessionId,
 		UserIp:    c.IP(),
 	}
 	err := w.service.WhiteListRequest(req)
@@ -52,18 +60,23 @@ func (w *WhiteListHandler) Add(c *fiber.Ctx) error {
 // @Tags Whitelist
 // @Accept json
 // @Produce json
+// @Param        tk    query     string  false  "token"
 // @Success 201 {object} helper.Response "Successfully whitelisted the device"
 // @Failure 500 {object} helper.Response "Internal Server Error"
 // @Router /w/premium [get]
 // @Security ApiKeyAuth
 func (w *WhiteListHandler) PremiumAdd(c *fiber.Ctx) error {
-	key := c.Locals(constants.Key).(string)
-	SessionId := c.Locals(constants.SessionIdKey).(string)
-	// sessionId := c.Get(constants.SessionIdKey)
+	token := c.Query("tk")
+	claims, sErr := common.ValidateToken(token, w.cfg)
+	if sErr != nil {
+		return c.Status(sErr.Status).JSON(helper.GenerateResponseWithError(sErr, false))
+	}
+	key := claims[constants.Key].(string)
+	sessionId := claims[constants.SessionIdKey].(string)
 
 	req := &dto.WhiteListAddDTO{
 		Key:       key,
-		SessionId: SessionId,
+		SessionId: sessionId,
 		UserIp:    c.IP(),
 	}
 	err := w.service.WhiteListRequest(req)
@@ -79,21 +92,28 @@ func (w *WhiteListHandler) PremiumAdd(c *fiber.Ctx) error {
 // @Tags Whitelist
 // @Accept json
 // @Produce json
-// @Success 201 {object} helper.Response "Successfully whitelisted the device"
+// @Param        tk    query     string  false  "token"
+// @Success 200 {object} helper.Response "Successfully removed whitelisted the device"
 // @Failure 500 {object} helper.Response "Internal Server Error"
 // @Router /rw [get]
 // @Security ApiKeyAuth
 func (w *WhiteListHandler) Remove(c *fiber.Ctx) error {
-	key := c.Locals(constants.Key).(string)
-	sessionId := c.Locals(constants.SessionIdKey).(string)
+	token := c.Query("tk")
+	claims, sErr := common.ValidateToken(token, w.cfg)
+	if sErr != nil {
+		return c.Status(sErr.Status).JSON(helper.GenerateResponseWithError(sErr, false))
+	}
+	key := claims[constants.Key].(string)
+	sessionId := claims[constants.SessionIdKey].(string)
+
 	req := &dto.WhiteListAddDTO{
 		Key:       key,
 		SessionId: sessionId,
-		UserIp:    "",
+		UserIp:    c.IP(),
 	}
 	err := w.service.WhiteListRemove(req)
 	if err != nil {
 		return c.Status(err.Status).JSON(helper.GenerateResponseWithError(err, false))
 	}
-	return c.Status(fiber.StatusCreated).JSON(helper.GenerateResponse("device removed from whitelist", true))
+	return c.Status(fiber.StatusOK).JSON(helper.GenerateResponse("device removed from whitelist", true))
 }

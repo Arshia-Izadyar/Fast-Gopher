@@ -10,7 +10,7 @@ import (
 
 func WhiteListAddRouter(app fiber.Router, cfg *config.Config) {
 	h := handler.NewWhiteListHandler(cfg)
-	app.Get("/w", authentication.New(cfg), h.Add)
+	app.Get("/w", h.Add)
 	app.Get("/w/premium", authentication.New(cfg), middleware.Premium(), h.PremiumAdd)
 	app.Get("/rw", authentication.New(cfg), h.Remove)
 }
