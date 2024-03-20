@@ -9,10 +9,10 @@ const docTemplate = `{
     "info": {
         "description": "{{escape .Description}}",
         "title": "{{.Title}}",
-        "termsOfService": "Kir",
+        "termsOfService": "Lol",
         "contact": {
             "name": "API Support",
-            "email": "arshiaa104@gmail.com"
+            "email": "a@gmail.com"
         },
         "license": {
             "name": "Apache 2.0",
@@ -299,9 +299,17 @@ const docTemplate = `{
                     "Whitelist"
                 ],
                 "summary": "remove a device to the whitelist",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "token",
+                        "name": "tk",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
-                    "201": {
-                        "description": "Successfully whitelisted the device",
+                    "200": {
+                        "description": "Successfully removed whitelisted the device",
                         "schema": {
                             "$ref": "#/definitions/helper.Response"
                         }
@@ -373,6 +381,14 @@ const docTemplate = `{
                     "Whitelist"
                 ],
                 "summary": "Add a device to the whitelist",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "token",
+                        "name": "tk",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "201": {
                         "description": "Successfully whitelisted the device",
@@ -407,6 +423,14 @@ const docTemplate = `{
                     "Whitelist"
                 ],
                 "summary": "Add a device to the whitelist (free premium)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "token",
+                        "name": "tk",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "201": {
                         "description": "Successfully whitelisted the device",
@@ -543,7 +567,7 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "0.1",
-	Host:             "127.0.0.1:4000",
+	Host:             "http://51.195.26.201:4000",
 	BasePath:         "/api/v1",
 	Schemes:          []string{},
 	Title:            "Internal auth",

@@ -13,12 +13,13 @@ import (
 // @title Internal auth
 // @version 0.1
 // @description internal service for Auth
-// @termsOfService Kir
+// @termsOfService Lol
 // @contact.name API Support
-// @contact.email arshiaa104@gmail.com
+// @contact.email a@gmail.com
 // @license.name Apache 2.0
 // @license.url http://www.apache.org/licenses/LICENSE-2.0.html
-// @host 127.0.0.1:4000
+// @host dev-1.paya.dev:80
+// @host http://51.195.26.201:4000
 // @BasePath /api/v1
 // @securityDefinitions.apikey ApiKeyAuth
 // @in header
