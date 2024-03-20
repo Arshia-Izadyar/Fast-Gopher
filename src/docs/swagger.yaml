@@ -69,7 +69,7 @@ definitions:
       success:
         type: boolean
     type: object
-host: http://dev-1.paya.dev:80
+host: dev-1.paya.dev:80
 info:
   contact:
     email: a@gmail.com

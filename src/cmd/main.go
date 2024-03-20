@@ -18,7 +18,7 @@ import (
 // @contact.email a@gmail.com
 // @license.name Apache 2.0
 // @license.url http://www.apache.org/licenses/LICENSE-2.0.html
-// @host http://dev-1.paya.dev:80
+// @host dev-1.paya.dev:80
 // @BasePath /api/v1
 // @securityDefinitions.apikey ApiKeyAuth
 // @in header
