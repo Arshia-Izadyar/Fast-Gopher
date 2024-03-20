@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/config"
-	"github.com/bytedance/sonic"
+	"github.com/goccy/go-json"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -28,7 +28,7 @@ func InitRedis(cfg *config.Config) error {
 }
 
 func Set[T any](k string, v T, d time.Duration) error {
-	value, err := sonic.Marshal(v)
+	value, err := json.Marshal(v)
 	if err != nil {
 		return err
 	}
@@ -45,7 +45,7 @@ func Get[T any](k string) (*T, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = sonic.Unmarshal([]byte(v), &dest)
+	err = json.Unmarshal([]byte(v), &dest)
 	if err != nil {
 		return nil, err
 	}

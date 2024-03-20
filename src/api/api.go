@@ -6,7 +6,7 @@ import (
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/api/router"
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/config"
 	_ "github.com/Arshia-Izadyar/Fast-Gopher/src/docs"
-	"github.com/bytedance/sonic"
+	"github.com/goccy/go-json"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 
@@ -18,8 +18,8 @@ import (
 func InitServer(cfg *config.Config) error {
 	app := fiber.New(
 		fiber.Config{
-			JSONEncoder: sonic.Marshal,
-			JSONDecoder: sonic.Unmarshal,
+			JSONEncoder: json.Marshal,
+			JSONDecoder: json.Unmarshal,
 		},
 	)
 

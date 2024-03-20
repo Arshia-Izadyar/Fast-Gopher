@@ -14,7 +14,7 @@
         },
         "version": "0.1"
     },
-    "host": "127.0.0.1:4000",
+    "host": "5.161.134.47:4000",
     "basePath": "/api/v1",
     "paths": {
         "/auth/refresh": {
