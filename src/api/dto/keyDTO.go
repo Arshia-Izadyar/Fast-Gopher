@@ -38,11 +38,17 @@ type DeviceDTO struct {
 }
 
 type RemoveDeviceDTO struct {
-	DeviceName string `json:"device_name" validate:"required"`
-	SessionId  string `json:"session_id" validate:"required"`
+	Key       string `json:"-"`
+	SessionId string `json:"session_id" validate:"required"`
 }
 
 type SessionKeyDTO struct {
 	Key       string `json:"key" validate:"required"`
 	SessionId string `json:"session_id" validate:"required"`
+}
+
+type RenameDeviceDTO struct {
+	NewDeviceName string `json:"new_device_name" validate:"required"`
+	SessionId     string `json:"session_id" validate:"required"`
+	Key           string `json:"-"`
 }

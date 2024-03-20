@@ -16,4 +16,5 @@ func UserRouter(app fiber.Router, cfg *config.Config) {
 	app.Get("/show", authentication.New(cfg), h.ShowActiveSessions)    // show all of active and white listed devices
 	app.Delete("/rm", authentication.New(cfg), h.RemoveDevice)         // remove a device
 	app.Delete("/rm/all", authentication.New(cfg), h.RemoveAllDevices) // remove all devices except this one
+	app.Patch("/rename", authentication.New(cfg), h.RenameDevice)      // remove all devices except this one
 }

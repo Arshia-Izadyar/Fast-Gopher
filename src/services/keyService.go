@@ -179,9 +179,9 @@ func (k *KeyService) ShowAllActiveDevices(req *dto.IKeyDTO) ([]dto.DeviceDTO, *s
 
 func (k *KeyService) DeleteSession(req *dto.RemoveDeviceDTO) *service_errors.ServiceErrors {
 	q := `
-		DELETE FROM active_devices WHERE session_id = $1 AND device_name = $2;
+		DELETE FROM active_devices WHERE session_id = $1 AND ac_keys_id = $2;
 	`
-	r, err := k.db.Exec(q, req.SessionId, req.DeviceName)
+	r, err := k.db.Exec(q, req.SessionId, req.Key)
 	if count, _ := r.RowsAffected(); count == 0 {
 		return &service_errors.ServiceErrors{EndUserMessage: "device not found", Status: fiber.StatusNotFound}
 	}
@@ -213,5 +213,21 @@ func (k *KeyService) DeleteAllSessions(req *dto.SessionKeyDTO) *service_errors.S
 		return &service_errors.ServiceErrors{EndUserMessage: "can't delete devices something went wrong", Status: fiber.StatusInternalServerError}
 	}
 	tx.Commit()
+	return nil
+}
+
+func (k *KeyService) ChangeDeviceName(req *dto.RenameDeviceDTO) *service_errors.ServiceErrors {
+	q := `
+		UPDATE active_devices SET device_name = $1 WHERE session_id = $2 AND ac_keys_id = $3;
+	`
+	r, err := k.db.Exec(q, req.NewDeviceName, req.SessionId, req.Key)
+	if count, _ := r.RowsAffected(); count == 0 {
+		return &service_errors.ServiceErrors{EndUserMessage: "device not found", Status: fiber.StatusNotFound}
+	}
+
+	if err != nil {
+		log.Fatal(err)
+		return &service_errors.ServiceErrors{EndUserMessage: "can't update device something went wrong", Status: fiber.StatusInternalServerError}
+	}
 	return nil
 }

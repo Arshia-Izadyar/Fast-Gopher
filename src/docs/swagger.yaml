@@ -12,11 +12,8 @@ definitions:
   dto.GenerateKeyDTO:
     properties:
       device_name:
+        description: SessionId  string `json:"session_id" validate:"required"`
         type: string
-      session_id:
-        type: string
-    required:
-    - session_id
     type: object
   dto.KeyAcDTO:
     properties:
@@ -26,19 +23,19 @@ definitions:
         type: string
       refresh_token:
         type: string
+      session_id:
+        type: string
     type: object
   dto.KeyDTO:
     properties:
       device_name:
+        description: SessionId  string `json:"session_id" validate:"required"`
         type: string
       key:
-        type: string
-      session_id:
         type: string
     required:
     - device_name
     - key
-    - session_id
     type: object
   dto.RefreshTokenDTO:
     properties:
@@ -49,12 +46,19 @@ definitions:
     type: object
   dto.RemoveDeviceDTO:
     properties:
-      device_name:
+      session_id:
+        type: string
+    required:
+    - session_id
+    type: object
+  dto.RenameDeviceDTO:
+    properties:
+      new_device_name:
         type: string
       session_id:
         type: string
     required:
-    - device_name
+    - new_device_name
     - session_id
     type: object
   helper.Response:
@@ -157,6 +161,36 @@ paths:
           schema:
             $ref: '#/definitions/helper.Response'
       summary: Generate a new Token based on already existing key
+      tags:
+      - Key
+  /rename:
+    patch:
+      description: rename an already existing device.
+      parameters:
+      - description: info for device
+        in: body
+        name: Request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.RenameDeviceDTO'
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: 'message: removed'
+          schema:
+            $ref: '#/definitions/helper.Response'
+        "400":
+          description: 'message: error message'
+          schema:
+            $ref: '#/definitions/helper.Response'
+        "500":
+          description: 'message: fuck'
+          schema:
+            $ref: '#/definitions/helper.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Rename a device
       tags:
       - Key
   /rm:
@@ -283,6 +317,28 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Add a device to the whitelist
+      tags:
+      - Whitelist
+  /w/premium:
+    get:
+      consumes:
+      - application/json
+      description: Adds a device IP and its identifier to the user's whitelist, ensuring
+        the device is allowed to access the service.
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Successfully whitelisted the device
+          schema:
+            $ref: '#/definitions/helper.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helper.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Add a device to the whitelist (free premium)
       tags:
       - Whitelist
 securityDefinitions:

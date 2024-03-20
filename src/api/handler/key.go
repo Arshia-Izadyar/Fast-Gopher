@@ -142,10 +142,10 @@ func (h *KeyHandler) RemoveDevice(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(helper.GenerateResponseWithError(err, false))
 	}
-	err = validate.Struct(req)
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(helper.GenerateResponseWithValidationError(err, false))
+	if req.SessionId == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(helper.GenerateResponseWithError(&service_errors.ServiceErrors{EndUserMessage: "please provide 'session_id'"}, true))
 	}
+	req.Key = c.Locals(constants.Key).(string)
 	sErr := h.service.DeleteSession(req)
 	if sErr != nil {
 		return c.Status(sErr.Status).JSON(helper.GenerateResponseWithError(sErr, false))
@@ -173,4 +173,33 @@ func (h *KeyHandler) RemoveAllDevices(c *fiber.Ctx) error {
 		return c.Status(sErr.Status).JSON(helper.GenerateResponseWithError(sErr, false))
 	}
 	return c.SendStatus(fiber.StatusNoContent)
+}
+
+// RenameDevice godoc
+// @Summary Rename a device
+// @Description rename an already existing device.
+// @Tags Key
+// @Produce json
+// @Param Request body dto.RenameDeviceDTO true "info for device"
+// @Success 202 {object} helper.Response "message: removed"
+// @Failure 400 {object} helper.Response "message: error message"
+// @Failure 500 {object} helper.Response "message: fuck"
+// @Router /rename [PATCH]
+// @Security ApiKeyAuth
+func (h *KeyHandler) RenameDevice(c *fiber.Ctx) error {
+	req := &dto.RenameDeviceDTO{}
+	err := c.BodyParser(&req)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(helper.GenerateResponseWithError(err, false))
+	}
+	err = validate.Struct(req)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(helper.GenerateResponseWithValidationError(err, false))
+	}
+	req.Key = c.Locals(constants.Key).(string)
+	sErr := h.service.ChangeDeviceName(req)
+	if sErr != nil {
+		return c.Status(sErr.Status).JSON(helper.GenerateResponseWithError(sErr, false))
+	}
+	return c.SendStatus(fiber.StatusAccepted)
 }
