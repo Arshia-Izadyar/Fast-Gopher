@@ -14,6 +14,7 @@ import (
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/data/postgres"
 	"github.com/Arshia-Izadyar/Fast-Gopher/src/pkg/service_errors"
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 	"github.com/lib/pq"
 )
 
@@ -59,10 +60,11 @@ func (u *KeyService) GenerateKey(req *dto.GenerateKeyDTO) (*dto.KeyAcDTO, *servi
 	saveSession := `
 		INSERT INTO active_devices(session_id, ac_keys_id, device_name) VALUES($1, $2, $3);
 	`
-	_, err = tx.Exec(saveSession, req.SessionId, key, req.DeviceName)
+	sessionId := uuid.New()
+	_, err = tx.Exec(saveSession, sessionId.String(), key, req.DeviceName)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok && pqErr.Code == "23505" {
-			return nil, &service_errors.ServiceErrors{EndUserMessage: fmt.Sprintf("session id (%s) already exists", req.SessionId), Status: fiber.StatusBadRequest}
+			return nil, &service_errors.ServiceErrors{EndUserMessage: fmt.Sprintf("session id (%s) already exists", sessionId.String()), Status: fiber.StatusBadRequest}
 		}
 		log.Fatal(err)
 	}
@@ -70,7 +72,7 @@ func (u *KeyService) GenerateKey(req *dto.GenerateKeyDTO) (*dto.KeyAcDTO, *servi
 		return nil, &service_errors.ServiceErrors{EndUserMessage: "failed to commit transaction", Status: fiber.StatusInternalServerError}
 	}
 
-	result, err := common.GenerateJwt(&dto.KeyDTO{Key: key, SessionId: req.SessionId}, u.cfg)
+	result, err := common.GenerateJwt(key, sessionId.String(), u.cfg)
 	// TODO: err handling
 	if err != nil {
 		return nil, &service_errors.ServiceErrors{EndUserMessage: "failed to Generate jwt", Status: fiber.StatusInternalServerError}
@@ -88,9 +90,27 @@ func (u *KeyService) GenerateTokenFromKey(req *dto.KeyDTO) (*dto.KeyAcDTO, *serv
 
 	// Save session
 	saveSession := `INSERT INTO active_devices(session_id, ac_keys_id, device_name) VALUES($1, $2, $3) ON CONFLICT (session_id, ac_keys_id) DO NOTHING;`
-	_, err = tx.Exec(saveSession, req.SessionId, req.Key, req.DeviceName)
+	sessionId := uuid.New()
+
+	_, err = tx.Exec(saveSession, sessionId.String(), req.Key, req.DeviceName)
 	if err != nil {
 		return nil, &service_errors.ServiceErrors{EndUserMessage: "failed to save session", Status: fiber.StatusInternalServerError}
+	}
+
+	optQ := `
+		WITH ranked_devices AS (
+			SELECT id, ROW_NUMBER() OVER (PARTITION BY ac_keys_id ORDER BY created_at DESC) AS rn
+			FROM active_devices
+			WHERE ac_keys_id = $1
+		)
+		DELETE FROM active_devices
+		WHERE id IN (
+			SELECT id FROM ranked_devices WHERE rn > 5
+		);
+	`
+	_, err = tx.Exec(optQ, req.Key)
+	if err != nil {
+		return nil, &service_errors.ServiceErrors{EndUserMessage: "failed to remove the 6th device", Status: fiber.StatusInternalServerError}
 	}
 
 	// commit the transaction
@@ -99,7 +119,7 @@ func (u *KeyService) GenerateTokenFromKey(req *dto.KeyDTO) (*dto.KeyAcDTO, *serv
 	}
 
 	// Generate JWT
-	tk, err := common.GenerateJwt(req, u.cfg)
+	tk, err := common.GenerateJwt(req.Key, sessionId.String(), u.cfg)
 	if err != nil {
 		return nil, &service_errors.ServiceErrors{EndUserMessage: "failed to generate JWT", Status: fiber.StatusInternalServerError}
 	}
@@ -130,10 +150,7 @@ func (u *KeyService) Refresh(req *dto.RefreshTokenDTO) (*dto.KeyAcDTO, *service_
 	key, _ := claims[constants.Key].(string)
 	session, _ := claims[constants.SessionIdKey].(string)
 
-	res, e := common.GenerateJwt(&dto.KeyDTO{
-		Key:       key,
-		SessionId: session,
-	}, u.cfg)
+	res, e := common.GenerateJwt(key, session, u.cfg)
 
 	if e != nil {
 		return nil, &service_errors.ServiceErrors{EndUserMessage: "JWT generation gone wrong", Status: fiber.StatusInternalServerError}
@@ -162,9 +179,9 @@ func (k *KeyService) ShowAllActiveDevices(req *dto.IKeyDTO) ([]dto.DeviceDTO, *s
 
 func (k *KeyService) DeleteSession(req *dto.RemoveDeviceDTO) *service_errors.ServiceErrors {
 	q := `
-		DELETE FROM active_devices WHERE session_id = $1 AND device_name = $2;
+		DELETE FROM active_devices WHERE session_id = $1 AND ac_keys_id = $2;
 	`
-	r, err := k.db.Exec(q, req.SessionId, req.DeviceName)
+	r, err := k.db.Exec(q, req.SessionId, req.Key)
 	if count, _ := r.RowsAffected(); count == 0 {
 		return &service_errors.ServiceErrors{EndUserMessage: "device not found", Status: fiber.StatusNotFound}
 	}
@@ -196,5 +213,21 @@ func (k *KeyService) DeleteAllSessions(req *dto.SessionKeyDTO) *service_errors.S
 		return &service_errors.ServiceErrors{EndUserMessage: "can't delete devices something went wrong", Status: fiber.StatusInternalServerError}
 	}
 	tx.Commit()
+	return nil
+}
+
+func (k *KeyService) ChangeDeviceName(req *dto.RenameDeviceDTO) *service_errors.ServiceErrors {
+	q := `
+		UPDATE active_devices SET device_name = $1 WHERE session_id = $2 AND ac_keys_id = $3;
+	`
+	r, err := k.db.Exec(q, req.NewDeviceName, req.SessionId, req.Key)
+	if count, _ := r.RowsAffected(); count == 0 {
+		return &service_errors.ServiceErrors{EndUserMessage: "device not found", Status: fiber.StatusNotFound}
+	}
+
+	if err != nil {
+		log.Fatal(err)
+		return &service_errors.ServiceErrors{EndUserMessage: "can't update device something went wrong", Status: fiber.StatusInternalServerError}
+	}
 	return nil
 }

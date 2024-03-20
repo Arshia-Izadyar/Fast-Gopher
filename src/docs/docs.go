@@ -148,6 +148,54 @@ const docTemplate = `{
                 }
             }
         },
+        "/rename": {
+            "patch": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "rename an already existing device.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Key"
+                ],
+                "summary": "Rename a device",
+                "parameters": [
+                    {
+                        "description": "info for device",
+                        "name": "Request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.RenameDeviceDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "202": {
+                        "description": "message: removed",
+                        "schema": {
+                            "$ref": "#/definitions/helper.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "message: error message",
+                        "schema": {
+                            "$ref": "#/definitions/helper.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "message: fuck",
+                        "schema": {
+                            "$ref": "#/definitions/helper.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/rm": {
             "delete": {
                 "security": [
@@ -340,6 +388,40 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/w/premium": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Adds a device IP and its identifier to the user's whitelist, ensuring the device is allowed to access the service.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Whitelist"
+                ],
+                "summary": "Add a device to the whitelist (free premium)",
+                "responses": {
+                    "201": {
+                        "description": "Successfully whitelisted the device",
+                        "schema": {
+                            "$ref": "#/definitions/helper.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/helper.Response"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -359,14 +441,9 @@ const docTemplate = `{
         },
         "dto.GenerateKeyDTO": {
             "type": "object",
-            "required": [
-                "session_id"
-            ],
             "properties": {
                 "device_name": {
-                    "type": "string"
-                },
-                "session_id": {
+                    "description": "SessionId  string ` + "`" + `json:\"session_id\" validate:\"required\"` + "`" + `",
                     "type": "string"
                 }
             }
@@ -382,6 +459,9 @@ const docTemplate = `{
                 },
                 "refresh_token": {
                     "type": "string"
+                },
+                "session_id": {
+                    "type": "string"
                 }
             }
         },
@@ -389,17 +469,14 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "device_name",
-                "key",
-                "session_id"
+                "key"
             ],
             "properties": {
                 "device_name": {
+                    "description": "SessionId  string ` + "`" + `json:\"session_id\" validate:\"required\"` + "`" + `",
                     "type": "string"
                 },
                 "key": {
-                    "type": "string"
-                },
-                "session_id": {
                     "type": "string"
                 }
             }
@@ -418,11 +495,22 @@ const docTemplate = `{
         "dto.RemoveDeviceDTO": {
             "type": "object",
             "required": [
-                "device_name",
                 "session_id"
             ],
             "properties": {
-                "device_name": {
+                "session_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.RenameDeviceDTO": {
+            "type": "object",
+            "required": [
+                "new_device_name",
+                "session_id"
+            ],
+            "properties": {
+                "new_device_name": {
                     "type": "string"
                 },
                 "session_id": {
