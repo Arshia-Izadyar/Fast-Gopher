@@ -256,11 +256,16 @@ paths:
       - application/json
       description: removes a device IP and its identifier to the user's whitelist,
         ensuring the device is not allowed to access the service.
+      parameters:
+      - description: token
+        in: query
+        name: tk
+        type: string
       produces:
       - application/json
       responses:
-        "201":
-          description: Successfully whitelisted the device
+        "200":
+          description: Successfully removed whitelisted the device
           schema:
             $ref: '#/definitions/helper.Response'
         "500":

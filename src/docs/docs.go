@@ -299,9 +299,17 @@ const docTemplate = `{
                     "Whitelist"
                 ],
                 "summary": "remove a device to the whitelist",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "token",
+                        "name": "tk",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
-                    "201": {
-                        "description": "Successfully whitelisted the device",
+                    "200": {
+                        "description": "Successfully removed whitelisted the device",
                         "schema": {
                             "$ref": "#/definitions/helper.Response"
                         }
