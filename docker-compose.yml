@@ -8,6 +8,9 @@ services:
     ports:
       - "4000:4000"
     command: ./api
+    depends_on:
+      - postgres
+      - redis
     networks:
       - webapi_network
 
