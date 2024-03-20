@@ -567,10 +567,10 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "0.1",
-	Host:             "http://51.195.26.201:4000",
+	Host:             "dev-1.paya.dev:8000",
 	BasePath:         "/api/v1",
 	Schemes:          []string{},
-	Title:            "Internal auth",
+	Title:            "Internal AUTH",
 	Description:      "internal service for Auth",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,

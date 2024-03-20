@@ -69,7 +69,7 @@ definitions:
       success:
         type: boolean
     type: object
-host: http://51.195.26.201:4000
+host: dev-1.paya.dev:8000
 info:
   contact:
     email: a@gmail.com
@@ -79,7 +79,7 @@ info:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html
   termsOfService: Lol
-  title: Internal auth
+  title: Internal AUTH
   version: "0.1"
 paths:
   /auth/refresh:
