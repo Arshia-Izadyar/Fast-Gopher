@@ -156,6 +156,9 @@ func (wl *WhiteListService) WhiteListRemove(req *dto.WhiteListAddDTO) *service_e
 		fmt.Println(err)
 		return &service_errors.ServiceErrors{EndUserMessage: "deletion failed", Status: fiber.StatusInternalServerError}
 	}
+	if err := exec.Command("ipset", "-!", "del", "whitelist", req.UserIp).Run(); err != nil {
+		return &service_errors.ServiceErrors{EndUserMessage: fmt.Sprintf("Attempt 1: Failed to execute ipset command: %v\n", err), Status: fiber.StatusForbidden}
+	}
 
 	tx.Commit()
 	return nil
