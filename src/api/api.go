@@ -61,6 +61,10 @@ func addMiddleware(app *fiber.App) {
 	// 	Duration:               0,
 	// 	Store:                  nil,
 	// }))
+	app.Use(cors.New(cors.Config{
+		AllowOrigins: "*",
+		AllowHeaders: "Origin, Content-Type, Accept",
+	}))
 
 	// app.Use(helmet.New())
 	app.Use(logger.New(logger.Config{
