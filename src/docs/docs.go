@@ -12,7 +12,7 @@ const docTemplate = `{
         "termsOfService": "Kir",
         "contact": {
             "name": "API Support",
-            "email": "arshiaa104@gmail.com"
+            "email": "a@gmail.com"
         },
         "license": {
             "name": "Apache 2.0",
@@ -567,7 +567,7 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "0.1",
-	Host:             "127.0.0.1:4000",
+	Host:             "5.161.134.47:4000",
 	BasePath:         "/api/v1",
 	Schemes:          []string{},
 	Title:            "Internal auth",

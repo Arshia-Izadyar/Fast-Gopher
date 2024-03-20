@@ -69,10 +69,10 @@ definitions:
       success:
         type: boolean
     type: object
-host: 127.0.0.1:4000
+host: 5.161.134.47:4000
 info:
   contact:
-    email: arshiaa104@gmail.com
+    email: a@gmail.com
     name: API Support
   description: internal service for Auth
   license:
