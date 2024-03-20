@@ -68,9 +68,7 @@ func (h *KeyHandler) GenerateKey(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(helper.GenerateResponseWithError(&service_errors.ServiceErrors{EndUserMessage: "parsing body failed"}, false))
 	}
-	if req.SessionId == "" {
-		return c.Status(fiber.StatusBadRequest).JSON(helper.GenerateResponseWithError(&service_errors.ServiceErrors{EndUserMessage: "please provide user session_id "}, false))
-	}
+
 	key, sErr := h.service.GenerateKey(req)
 	if sErr != nil {
 		return c.Status(sErr.Status).JSON(helper.GenerateResponseWithError(sErr, false))

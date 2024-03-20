@@ -16,7 +16,7 @@ var (
 	signingMethod = jwt.SigningMethodHS256
 )
 
-func GenerateJwt(key *dto.KeyDTO, cfg *config.Config) (*dto.KeyAcDTO, error) {
+func GenerateJwt(key, sessionId string, cfg *config.Config) (*dto.KeyAcDTO, error) {
 	var err error
 	res := &dto.KeyAcDTO{}
 
@@ -28,8 +28,8 @@ func GenerateJwt(key *dto.KeyDTO, cfg *config.Config) (*dto.KeyAcDTO, error) {
 
 	atClaims := jwt.MapClaims{
 		constants.ExpKey:       expirationTimeAccessToken,
-		constants.Key:          key.Key,
-		constants.SessionIdKey: key.SessionId,
+		constants.Key:          key,
+		constants.SessionIdKey: sessionId,
 		constants.AccessType:   true,
 	}
 
@@ -43,8 +43,8 @@ func GenerateJwt(key *dto.KeyDTO, cfg *config.Config) (*dto.KeyAcDTO, error) {
 
 	rfClaims := jwt.MapClaims{
 		constants.ExpKey:       expirationTimeRefreshToken,
-		constants.Key:          key.Key,
-		constants.SessionIdKey: key.SessionId,
+		constants.Key:          key,
+		constants.SessionIdKey: sessionId,
 		constants.AccessType:   false,
 	}
 
@@ -53,7 +53,8 @@ func GenerateJwt(key *dto.KeyDTO, cfg *config.Config) (*dto.KeyAcDTO, error) {
 	if err != nil {
 		return nil, err
 	}
-	res.Key = key.Key
+	res.Key = key
+	res.SessionId = sessionId
 	return res, nil
 }
 

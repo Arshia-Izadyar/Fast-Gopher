@@ -27,7 +27,6 @@ var W *cmd.WorkerPool
 
 func main() {
 	config.LoadConfig()
-	config.LoadGoogleConfig()
 	cfg := config.GetConfig()
 	err := cache.InitRedis(cfg)
 	if err != nil {
@@ -36,12 +35,10 @@ func main() {
 	_, err = postgres.ConnectDB(cfg)
 	defer postgres.CloseDB()
 	defer cache.Close()
-
 	if err != nil {
 		log.Fatal(err)
 	}
-	W = cmd.New(cfg.Server.WorkerCount)
+	// W = cmd.New(cfg.Server.WorkerCount)
 	api.InitServer(cfg)
 
 }
-
