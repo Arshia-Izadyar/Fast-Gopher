@@ -1,5 +1,5 @@
 Server:
-  Port: 4000
+  Port: 80
   runMode: debug
   workerCount: 350
 logger:

@@ -14,7 +14,7 @@
         },
         "version": "0.1"
     },
-    "host": "5.161.134.47:4000",
+    "host": "dev-1.paya.dev:80",
     "basePath": "/api/v1",
     "paths": {
         "/auth/refresh": {
